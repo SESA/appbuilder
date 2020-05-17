@@ -1,8 +1,70 @@
 # appbuilder
 
 This is the repo for building appliances for the various unikernel
-projects in the SESA group.
+projects in the SESA group.  
+
+This is based on the [nbic](https://github.com/jappavoo/nbic) work done for kittyhawk. It lets you create a image with a customized ramfs for running an individual application.  Basically the set of tools creates a chroot environment, run your app inside it, and then it looks at what files were accessed, and copies just those into the ramfs required.  This allows you to create a full function appliance with all the required files automatically.  Their experience is that it is generally tiny for most applications. 
+Note, this depends on a standard debian environment. 
+
+For extracting data out, we will NSF to mount a remote file system where we put the data; note to avoid perturbing results, we would want to  mount NSF just at the very end of the whole thing.
+
+Philosophy is that we will have everything in appliances, including the environment to build appliances and unikernels, so we can spin these suckers up.  There is *no* durable file system attached at all, we just use ramfs for everything.  We can publish the resulting appliances to a webservice, or dump them over NFS, 
+
+To simplify our lives, we will have one booting appliance and have a script in it that will download an image and kexec to it.   
+
+
+
+## Creating Appliance Builder host
 
 Base appliance from here:
 https://www.addictivetips.com/ubuntu-linux-tips/get-linux-kernel-5-3-on-debian-10-stable/
+
+These are the commands executed after that:
+
+     10  sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
+     11  sudo nano -w /etc/apt/sources.list
+     12  sudo apt update
+     13  apt search linux-image
+
+We install desktop to ensure that we have ne1000 nic and other device drivers (cloud version is limited set of drivers"
+
+     apt search linux-image | grep buster-backports
+     sudo apt install linux-headers-5.5.0-0.bpo.2-amd64
+
+Now checkout this repo and the nbic repo for building appliances
+
+    git clone https://github.com/SESA/appbuilder.git
+    git clone https://github.com/jappavoo/nbic.git
+
+Grab the debian kernel source package
+
+Rebuild debian kernel:
+https://kernel-team.pages.debian.net/kernel-handbook/ch-common-tasks.html#s-common-official
+For the version of the kernel we are using.
+
+
+In the kernel's directory, get the configs we are using for appliance:
+     git clone https://github.com/unikernelLinux/Linux-Configs.git
+
+Inside Linux-Configs/normal-linux:
+
+
+In Kernel:
+cp -r linux-source-5.5 golden-config-5.5
+
+Then copy in the config
+sesa@buster:~/Kernels/golden-config-5.5$ cp ../Linux-Configs/normal-linux/golden-config-5.5 .config
+
+Then
+
+    make oldconfig
+    
+We just picked default for everything.
+
+Then we make the kernel for our config:
+
+    jobs=$(nproc --all)
+    make -j$jobs deb-pkg
+
+
 
