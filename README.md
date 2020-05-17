@@ -25,9 +25,9 @@ These are the commands executed after that
      17  ls
      18  history
      19  sudo apt install linux-headers-5.5.0-0.bpo.2-amd64
-     20  history
+20  history
 
 Now checkout this repo and the nbic repo for building appliances
 
     29  git clone https://github.com/SESA/appbuilder.git
-     30  git clone https://github.com/jappavoo/nbic.git
+    30  git clone https://github.com/jappavoo/nbic.git
