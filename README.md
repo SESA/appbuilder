@@ -6,7 +6,8 @@ projects in the SESA group.
 Base appliance from here:
 https://www.addictivetips.com/ubuntu-linux-tips/get-linux-kernel-5-3-on-debian-10-stable/
 
-These are the commands executed after that
+These are the commands executed after that:
+
       2  sudo shutdown now
       3  exit
       4  df
