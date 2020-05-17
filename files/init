@@ -20,8 +20,8 @@ if ! mount -t devtmpfs -o mode=0755 udev /dev; then
   [[ -e /dev/zero ]] || mknod /dev/zero c 1 5
   [[ -e /dev/random ]] || mknod /dev/random c 1 8
   [[ -e /dev/urandom ]] || mknod /dev/urandom c 1 9
-fi
-mount -t devpts devpts /dev/pts
+  mount -t devpts devpts /dev/pts
+fi 
 
 # Some things don't work properly without /etc/mtab.
 ln -sf /proc/mounts /etc/mtab
@@ -57,12 +57,12 @@ fi
 
 # OVERRIDE APP END BEHAVIOUR FROM COMMAND LINE
 if [[  ${cmdline} =~ ^.*appEnd=\'(.*)\'.*$ ]]; then
-  APP_CMDS="${BASH_REMATCH[1]}"
+  APP_END="${BASH_REMATCH[1]}"
 fi
 
 
 # SET APP_DEBUG IF IN COMMAND LINE
-if [[  ${cmdline} =~ ^.*appdebug.*$ ]]; then
+if [[  ${cmdline} =~ ^.*appDebug.*$ ]]; then
   APP_DEBUG=1
 fi
 
