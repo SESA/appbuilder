@@ -28,3 +28,27 @@ Grab the debian kernel source package
 Rebuild debian kernel:
 https://kernel-team.pages.debian.net/kernel-handbook/ch-common-tasks.html#s-common-official
 For the version of the kernel we are using.
+
+
+In the kernel's directory, get the configs we are using for appliance:
+     git clone https://github.com/unikernelLinux/Linux-Configs.git
+
+Inside Linux-Configs/normal-linux:
+
+
+In Kernel:
+cp -r linux-source-5.5 golden-config-5.5
+
+Then copy in the config
+sesa@buster:~/Kernels/golden-config-5.5$ cp ../Linux-Configs/normal-linux/golden-config-5.5 .config
+
+Then
+    make oldconfig
+We just picked default for everything.
+
+Then we make the kernel for our config:
+    jobs=$(nproc --all)
+    make -j$jobs deb-pkg
+
+
+
