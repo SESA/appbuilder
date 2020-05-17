@@ -1,7 +1,18 @@
 # appbuilder
 
 This is the repo for building appliances for the various unikernel
-projects in the SESA group.
+projects in the SESA group.  
+
+This is based on the [nbic](https://github.com/jappavoo/nbic) work done for kittyhawk. It lets you create a image with a customized ramfs for running an individual application.  Basically the set of tools creates a chroot environment, run your app inside it, and then it looks at what files were accessed, and copies just those into the ramfs required.  This allows you to create a full function appliance with all the required files automatically.  Their experience is that it is generally tiny for most applications. 
+Note, this depends on a standard debian environment. 
+
+For extracting data out, we will NSF to mount a remote file system where we put the data; note to avoid perturbing results, we would want to  mount NSF just at the very end of the whole thing.
+
+Philosophy is that we will have everything in appliances, including the environment to build appliances and unikernels, so we can spin these suckers up.  There is *no* durable file system attached at all, we just use ramfs for everything.  We can publish the resulting appliances to a webservice, or dump them over NFS, 
+
+To simplify our lives, we will have one booting appliance and have a script in it that will download an image and kexec to it.   
+
+
 
 ## Creating Appliance Builder host
 
