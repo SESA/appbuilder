@@ -21,14 +21,17 @@ These are the commands executed after that:
      12  sudo apt update
      13  apt search linux-image
      14  apt search linux-image | grep buster-backports
-     15  echo "We install desktop to ensure that we have ne1000 nic and other device drivers (cloud version is limited set of drivers"
+ 
+We install desktop to ensure that we have ne1000 nic and other device drivers (cloud version is limited set of drivers"
+ 
      16  sudo apt install linux-image-5.5.0-0.bpo.2-amd64
      17  ls
      18  history
      19  sudo apt install linux-headers-5.5.0-0.bpo.2-amd64
-20  history
 
 Now checkout this repo and the nbic repo for building appliances
 
     29  git clone https://github.com/SESA/appbuilder.git
     30  git clone https://github.com/jappavoo/nbic.git
+
+Grab the debian kernel source package
