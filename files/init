@@ -1,0 +1,111 @@
+#!/bin/bash
+set -x
+export HOME=/root
+export LOGNAME=root
+export TERM=vt100
+export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
+export ENV="HOME=$HOME LOGNAME=$LOGNAME TERM=$TERM PATH=$PATH"
+
+# setup standard file system view
+mount -t proc /proc /proc
+mount -t sysfs /sys /sys
+
+# take care of /dev 1) try using devtmpfs and devpts or 2) dev of exiting fs and devpts
+if ! mount -t devtmpfs -o mode=0755 udev /dev; then
+  # failed to mount devtmpfs
+  # so add a few useful things if not already in file system
+  echo "W: devtmpfs not available, falling back to tmpfs for /dev"
+  [[ -e /dev/console ]] || mknod -m 0600 /dev/console c 5 1
+  [[ -e /dev/null ]] || mknod /dev/null c 1 3
+  [[ -e /dev/zero ]] || mknod /dev/zero c 1 5
+  [[ -e /dev/random ]] || mknod /dev/random c 1 8
+  [[ -e /dev/urandom ]] || mknod /dev/urandom c 1 9
+fi
+mount -t devpts devpts /dev/pts
+
+# Some things don't work properly without /etc/mtab.
+ln -sf /proc/mounts /etc/mtab
+
+######  APP RELATED BEHVIOUR
+
+export APP_DIR=/app
+export APP_PRERUN=${APP_DIR}/prerun
+export APP_POSTRUN=${APP_DIR}/postrun
+export APP_RUN=${APP_DIR}/run
+export APP_OUT=${APP_DIR}/output
+export APP_END=halt
+
+export APP_ARGS=''
+export APP_CMDS=''
+export APP_DEBUG=''
+
+if [[ ! -e ${APP_DIR} ]]; then
+  mkdir -p ${APP_DIR}
+fi
+
+# APP PARAMETERS
+cmdline=$(cat /proc/cmdline)
+# PARSE OUT APP ARGUMENTS
+if [[ ${cmdline}  =~ ^.*appArgs=\'(.*)\'.*$ ]]; then
+  APP_ARGS="${BASH_REMATCH[1]}"
+fi
+
+# PARSE OUT ANY APP COMMANDS TO RUN FROM COMMAND LINE
+if [[ ${cmdline} =~ ^.*appCmds=\'(.*)\'.*$ ]]; then
+  APP_CMDS="${BASH_REMATCH[1]}"
+fi
+
+# OVERRIDE APP END BEHAVIOUR FROM COMMAND LINE
+if [[  ${cmdline} =~ ^.*appEnd=\'(.*)\'.*$ ]]; then
+  APP_CMDS="${BASH_REMATCH[1]}"
+fi
+
+
+# SET APP_DEBUG IF IN COMMAND LINE
+if [[  ${cmdline} =~ ^.*appdebug.*$ ]]; then
+  APP_DEBUG=1
+fi
+
+if [[ ${APP_DEBUG} == 1 ]]; then 
+  # stop and start a shell at the console            
+  echo "APP_DEBUG:  starting shell ... exit shell to continue init logic"
+  env -i $ENV /bin/bash --login --noprofile --norc
+fi
+
+if [[ -e ${APP_PRERUN} ]]; then
+  # run command within this shell context  
+  . ${APP_PRERUN} >> ${APP_DIR}/app_out
+fi
+
+# process any additional commands that we are supposed to here
+if [[ -n ${APP_CMDS} ]]
+then
+    while [[ -n ${APP_CMDS}]]
+    do
+      cmd=${APP_CMDS%%:*}
+      APP_CMDS=${APP_CMDS#*:}
+      eval $cmd >> ${APP_OUT}
+    done 
+fi
+
+if [[ -e ${APP_RUN} ]]; then
+  # run the app run file
+  . ${APP_RUN} >> ${APP_OUT}
+fi
+
+if [[ -e ${APP_POSTRUN} ]]; then
+  . ${APP_POSTRUN} >> ${APP_OUT}
+fi
+
+# Do specified app end logic 
+if [[ ${APP_END} == halt ]]; then
+   shutdown now 
+elif [[ ${APP_END} == reboot ]]; then
+   shutdown -r now
+elif [[ ${APP_END} == sshd ]]; then 
+   /sbin/sshd
+fi   
+
+# if we get here then we might as well start a shell :-) 
+env -i $ENV /bin/bash --login --noprofile --norc
+

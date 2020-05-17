@@ -1,0 +1,29 @@
+#!/bin/bash
+HOME=/root
+LOGNAME=root
+TERM=vt100
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
+ENV="HOME=$HOME LOGNAME=$LOGNAME TERM=$TERM PATH=$PATH"
+
+mount -t proc /proc /proc
+mount -t sysfs /sys /sys
+
+if ! mount -t devtmpfs -o mode=0755 udev /dev; then
+  # failed to mount devtmpfs
+  # so add a few useful things if not already in file system
+  echo "W: devtmpfs not available, falling back to tmpfs for /dev"
+  [[ -e /dev/console ]] || mknod -m 0600 /dev/console c 5 1
+  [[ -e /dev/null ]] || mknod /dev/null c 1 3
+  [[ -e /dev/zero ]] || mknod /dev/zero c 1 5
+  [[ -e /dev/random ]] || mknod /dev/random c 1 8
+  [[ -e /dev/urandom ]] || mknod /dev/urandom c 1 9
+fi
+mount -t devpts devpts /dev/pts
+
+env -i $ENV PS1='\w# ' /bin/bash --login --noprofile --norc
+
+
+umount /dev/pts
+umount /dev
+umount /sys
+umount /proc
