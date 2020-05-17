@@ -74,7 +74,7 @@ fi
 
 if [[ -e ${APP_PRERUN} ]]; then
   # run command within this shell context  
-  . ${APP_PRERUN} >> ${APP_DIR}/app_out
+  . ${APP_PRERUN} &>> ${APP_DIR}/app_out
 fi
 
 # process any additional commands that we are supposed to here
@@ -84,13 +84,13 @@ then
     do
       cmd=${APP_CMDS%%:*}
       APP_CMDS=${APP_CMDS#*:}
-      eval $cmd >> ${APP_OUT}
+      eval $cmd &>> ${APP_OUT}
     done 
 fi
 
 if [[ -e ${APP_RUN} ]]; then
   # run the app run file
-  . ${APP_RUN} >> ${APP_OUT}
+  . ${APP_RUN} ${APP_ARGS} >> ${APP_OUT}
 fi
 
 if [[ -e ${APP_POSTRUN} ]]; then
