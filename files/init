@@ -80,7 +80,7 @@ fi
 # process any additional commands that we are supposed to here
 if [[ -n ${APP_CMDS} ]]
 then
-    while [[ -n ${APP_CMDS}]]
+    while [[ -n ${APP_CMDS} ]]
     do
       cmd=${APP_CMDS%%:*}
       APP_CMDS=${APP_CMDS#*:}
