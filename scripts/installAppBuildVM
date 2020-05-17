@@ -1,0 +1,1 @@
+kvm -hda debian10.4.base.img -cdrom debian-10.4.0-amd64-netinst.iso  -m 2048 -netdev user,id=network0 -device e1000,netdev=network0,mac=52:54:00:12:34:56

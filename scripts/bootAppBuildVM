@@ -1,0 +1,1 @@
+kvm -hda debian10.4.base.img -smp 4  -m 2048 -netdev user,id=network0,hostfwd=tcp:127.0.0.1:2222-:22 -device e1000,netdev=network0,mac=52:54:00:12:34:56

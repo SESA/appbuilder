@@ -1,0 +1,1 @@
+kvm -serial stdio -kernel vmlinuz-5.5.17  -initrd bash.cpio.gz -append "console=ttyS0 appEnd='bash' appCmds='mkdir --help:ls:ls /app:'"
