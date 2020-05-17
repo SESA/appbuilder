@@ -3,6 +3,8 @@
 This is the repo for building appliances for the various unikernel
 projects in the SESA group.
 
+## Creating Appliance Builder host
+
 Base appliance from here:
 https://www.addictivetips.com/ubuntu-linux-tips/get-linux-kernel-5-3-on-debian-10-stable/
 
@@ -43,10 +45,13 @@ Then copy in the config
 sesa@buster:~/Kernels/golden-config-5.5$ cp ../Linux-Configs/normal-linux/golden-config-5.5 .config
 
 Then
+
     make oldconfig
+    
 We just picked default for everything.
 
 Then we make the kernel for our config:
+
     jobs=$(nproc --all)
     make -j$jobs deb-pkg
 
