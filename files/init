@@ -99,9 +99,9 @@ fi
 
 # Do specified app end logic 
 if [[ ${APP_END} == halt ]]; then
-   shutdown now 
+   halt -p -f -d  
 elif [[ ${APP_END} == reboot ]]; then
-   shutdown -r now
+   halt --reboot -f -d 
 elif [[ ${APP_END} == sshd ]]; then 
    /sbin/sshd
 fi   
