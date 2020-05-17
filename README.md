@@ -24,3 +24,7 @@ Now checkout this repo and the nbic repo for building appliances
     git clone https://github.com/jappavoo/nbic.git
 
 Grab the debian kernel source package
+
+Rebuild debian kernel:
+https://kernel-team.pages.debian.net/kernel-handbook/ch-common-tasks.html#s-common-official
+For the version of the kernel we are using.
