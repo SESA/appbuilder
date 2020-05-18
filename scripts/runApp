@@ -1,1 +1,51 @@
-kvm -serial stdio -kernel vmlinuz-5.5.17  -initrd bash.cpio.gz -append "console=ttyS0 appEnd='bash' appCmds='mkdir --help:ls:ls /app:'"
+#!/bin/bash
+set -x
+
+usage="$0 <appdir>
+	  real usage string goes here ;-)"
+
+RUNNER=kvm
+RUNNER_ARGS=${AppRunnerArgs:-"-serial stdio"}
+
+appdir=$1
+appname=${appdir}
+appkernel=${appdir}/vmlinuz
+appinitrd=${appdir}/initrd
+appcmdline=${appdir}/cmdline
+
+function USAGE()
+{
+    echo "$usage" > /dev/stderr
+}
+
+if [[ ! -d $appdir ]]; then
+    echo "ERROR: bad app directory: $appdir"
+    USAGE
+    exit -1
+fi
+
+if [[ ! -e $appkernel ]]; then
+    echo "ERROR: could not locate kernel: $appkernel (don't forget to simlink your kernel)" > /dev/stderr
+    ls -l $appdir > /dev/stderr
+    USAGE
+    exit -1
+fi
+
+if [[ ! -e $appinitrd ]]; then
+    echo "ERROR: could not locate initrd: $appinitrd (don't forget to simlink your initrd)" > /dev/stderr
+    ls -l $appdir > /dev/stderr 
+    USAGE
+    exit -1
+fi
+
+if [[ ! -e $appcmdline ]]; then
+    echo "ERROR: could not locate cmdline: $appcmdline (don't forget to simlink your cmdlineargs)" > /dev/stderr
+    ls -l $appdir > /dev/stderr 
+    USAGE
+    exit -1
+fi
+cmdline="$(cat ${appcmdline})"
+
+shift
+
+${RUNNER} ${RUNNER_ARGS} -kernel ${appkernel}  -initrd ${appinitrd} -append "${cmdline} $@"
