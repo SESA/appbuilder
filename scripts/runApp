@@ -1,7 +1,10 @@
 #!/bin/bash
-set -x
+#set -x
 
-usage="$0 <appdir>
+usage="$0 <appdir> [extra command line arguments]
+	  eg.  runApp Appliances/apps/genricApp \"appDebug\"
+	       runApp Appliances/apps/genricApp \"appEnd='bash'\"
+	       runApp Appliances/apps/genricApp \"appEnd='bash' appCmds='ls:mkdir -h:'\"
 	  real usage string goes here ;-)"
 
 RUNNER=kvm
@@ -48,4 +51,5 @@ cmdline="$(cat ${appcmdline})"
 
 shift
 
+echo ${RUNNER} ${RUNNER_ARGS} -kernel ${appkernel}  -initrd ${appinitrd} -append "${cmdline} $@"
 ${RUNNER} ${RUNNER_ARGS} -kernel ${appkernel}  -initrd ${appinitrd} -append "${cmdline} $@"

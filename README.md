@@ -18,7 +18,7 @@ The base image you need for this is in a shared google drive called
 [SESAAppBuilder](https://drive.google.com/drive/u/0/folders/10GYMi65Ikn2eYitcCgnaGde25ldxBOxm).
 Inside there the base image all the work has been done in is called:
 
-    debian10.4.postinstall.img
+    debian10.4.base.img
 
 Just download that image to get eveything running. The work is done as "sesa", and both "root" and "sesa" have the non-secure sesa password.
 
@@ -32,11 +32,12 @@ Unders scripts we have:
 
 Examples or stuff not yet done:
 - mkapp: which is bogus, but will include some of the stuff describe below to create a new apps
-- runApp: right now it is hardcoded, same info as below, but we will clean this up eventually
+- runApp: right you specify an app directory and it attempts to run a kvm instance with the kernel, initrd and cmdline in the directory
+          the expectation is that you copy the correct things your want into an appdir and then simlink to the necessary files.
+	  See the example in Appliances/apps/genricApp
+	  and usage string of runApp when run with no arguments
 
 
-The script directory also has a set of scripts you should not need to use unless you are creating your own app builder.
-- installAppBuildVM: command used to create the VM from iso
 
 When you log into the vm key directories as sesa user are:
  - appbuilder : this repo
@@ -49,18 +50,25 @@ When you log into the vm key directories as sesa user are:
 
 ## Building appliances
 
-If you want to add new packages/software, I think  you want to make a copy of the buster-reference-root, but for now lets assume you are just using it.  
+If you want to add new packages/software you do this by running chroot environment against the reference root
 
 I think you would just:
 
-    chroot buster-reference-root
+    nd buster-reference-root
+    This will drop you into a root shell running against the reference root (we have prepped it with the latest debain and packages for the 5.5 series of kernels)
     run apt-get on whatever you want
+    Then exit from the shell
+    Note if you did complicated installs or stuff that start processes.  You must clean up.  In this case your better off rebooting your vm
 
 Once you have the stuff installed, want to create a new cpios:
 
     nbic -d buster-reference-root -o Appliances/cpios/XXX.cpio
 
 Where buster-reference-root is the base file system and XXX is the name of the new appliances file system. After you hit return you are in the chroot file system, anything you type will be in the new file system.  Then exit and you will find a new cpio.  Note, we recommend that you copy out the "cmds" from the root directory that has a set of base programs that are used by init.
+
+Or you can simply merge your new cpio with the bash.cpio to ensure that you have the necessary base contents
+
+Please place new cpios in the cpios directory and create appliances in the apps dir.
 
 You should create a new appliance in the apps directory, putting in your commmand line and kernel.
 
@@ -72,9 +80,15 @@ called "run" in the app directory of the root file system. Just copy
 your appliances out of the appliance builder, zip up your ram file
 system, and run kvm, e.g, for an appliance called bash
 
-    scp -r -P 2222 sesa@127.0.0.1:Appliances/cpios/bash.cpio .
+    mkdir myApp
+    scp -r -P 2222 sesa@127.0.0.1:Appliances/cpios/bash.cpio myApp
+    cd myApp
     gzip -9 bash.cpio
-    kvm -serial stdio -kernel vmlinuz-5.5.17  -initrd bash.cpio.gz -append "console=ttyS0 appdebug"
+    ln -s bash.cpio.gz initrd
+    do the same for your kernel and command line arguments
+    cd ..
+    runApp myApp
+
 
 If you look at the buster-reference-root file system, you will see an "app" directory.  Please put in that app directory any application specific code you want to execute.  The init script is designed to automatically run the following files from this directory:
 - "prerun" suff  you want before your appliance
@@ -97,8 +111,24 @@ Examples:
      kvm -serial stdio -kernel vmlinuz-5.5.17  -initrd bash.cpio.gz -append "console=ttyS0 appEnd='bash'"
      kvm -serial stdio -kernel vmlinuz-5.5.17  -initrd bash.cpio.gz -append "console=ttyS0 appCmds='mkdir --help:ls :'"
      kvm -serial stdio -kernel vmlinuz-5.5.17  -initrd bash.cpio.gz -append "console=ttyS0 appEnd='bash' appCmds='mkdir --help:ls:ls /app:'"
- 
-## Creating Appliance Builder host
+
+     runApp does the above for you
+
+## Kernel construction
+
+In the kvm builder VM there is all the infrastructure to compile the 5.5 series kernels with our configs.
+
+Call me for details.
+
+You should build your kernels and copy them out for your apps
+
+
+## Creating Appliance Builder host You can safely ignore this
+
+Details you don't need unless you are trying to build your own appBuilderVM
+
+The script directory also has a set of scripts you should not need to use unless you are creating your own app builder.
+- installAppBuildVM: command used to create the VM from iso
 
 Base appliance from here:
 https://www.addictivetips.com/ubuntu-linux-tips/get-linux-kernel-5-3-on-debian-10-stable/
@@ -237,3 +267,5 @@ sesa@buster:~$ cd buster-reference-root/
 sesa@buster:~/buster-reference-root$ ls
 bin   chroot  etc   init  lib32  libx32  mnt  proc  run   srv  tmp  var
 boot  dev     home  lib   lib64  media   opt  root  sbin  sys  usr
+
+
