@@ -114,3 +114,4 @@ fi
 # if we get here then we might as well start a shell :-) 
 env -i $ENV /bin/bash --login --noprofile --norc
 
+halt -p -f -d
