@@ -52,17 +52,20 @@ fi
 cmdline=$(cat /proc/cmdline)
 # PARSE OUT APP ARGUMENTS
 if [[ ${cmdline}  =~ ^.*appArgs=\'(.*)\'.*$ ]]; then
-  APP_ARGS="${BASH_REMATCH[1]}"
+    APP_ARGS="${BASH_REMATCH[1]}"
+    APP_ARGS=${APP_ARGS%%\'*}
 fi
 
 # PARSE OUT ANY APP COMMANDS TO RUN FROM COMMAND LINE
 if [[ ${cmdline} =~ ^.*appCmds=\'(.*)\'.*$ ]]; then
-  APP_CMDS="${BASH_REMATCH[1]}"
+    APP_CMDS="${BASH_REMATCH[1]}"
+    APP_CMDS=${APP_CMDS%%\'*}
 fi
 
 # OVERRIDE APP END BEHAVIOUR FROM COMMAND LINE
 if [[  ${cmdline} =~ ^.*appEnd=\'(.*)\'.*$ ]]; then
-  APP_END="${BASH_REMATCH[1]}"
+    APP_END="${BASH_REMATCH[1]}"
+    APP_END=${APP_END%%\'*}
 fi
 
 
