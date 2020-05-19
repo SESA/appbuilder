@@ -107,8 +107,12 @@ if [[ ${APP_END} == halt ]]; then
    halt -p -f -d  
 elif [[ ${APP_END} == reboot ]]; then
    halt --reboot -f -d 
-elif [[ ${APP_END} == sshd ]]; then 
-   /sbin/sshd
+elif [[ ${APP_END} == sshd ]]; then
+    # assumes you have installed ssh
+    # Note this runs in the background
+    # so we will go onto run a shell on
+    # console as well
+  sshd
 fi   
 
 # if we get here then we might as well start a shell :-) 
