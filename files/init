@@ -20,11 +20,16 @@ if ! mount -t devtmpfs -o mode=0755 udev /dev; then
   [[ -e /dev/zero ]] || mknod /dev/zero c 1 5
   [[ -e /dev/random ]] || mknod /dev/random c 1 8
   [[ -e /dev/urandom ]] || mknod /dev/urandom c 1 9
-  mount -t devpts devpts /dev/pts
 fi 
+
+[[ -e /dev/pts ]] || mkdir /dev/pts
+mount -t devpts devpts /dev/pts
 
 # Some things don't work properly without /etc/mtab.
 ln -sf /proc/mounts /etc/mtab
+
+# For good measure create /run/sshd
+[[ -e /run/sshd ]] || mkdir /run/sshd
 
 ######  APP RELATED BEHVIOUR
 
