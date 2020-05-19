@@ -26,13 +26,16 @@ sudo cp $filedir/init $refroot
 echo Updated init
 sudo cp $filedir/chroot $refroot
 echo Updated chroot
+sudo cp $filedir/initcmds $refroot
+echo Updated initcmds 
+
 if [[ ! -d $refroot/app ]]; then
     sudo mkdir -p $refroot/app
-    sudo cp -r $filedir/app
+    sudo cp -r $filedir/app/* $refroot/app
     echo updated app dir with default files
 fi
 
-if [[ -d $refroot/root/.ssh ]]; then
+if [[ ! -d $refroot/root/.ssh ]]; then
     sudo mkdir -p $refroot/root/.ssh && sudo chmod 0700 $refroot/root/.ssh
     sudo cp -r $filedir/ssh/* $refroot/root/.ssh
     echo udpated root/.ssh with defaults
