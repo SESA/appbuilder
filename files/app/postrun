@@ -1,0 +1,6 @@
+# Add commands you want to run after your experiment here
+
+# ifconfig eth0 up
+# /usr/sbin/sshd
+# scp -I key -r /app $APP_RESULTS_DESTINATION
+# halt -f -p -d
