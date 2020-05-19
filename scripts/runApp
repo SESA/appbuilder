@@ -8,7 +8,7 @@ usage="$0 <appdir> [extra command line arguments]
 	  real usage string goes here ;-)"
 
 RUNNER=kvm
-RUNNER_ARGS=${AppRunnerArgs:-"-display none -serial stdio -netdev user,id=network0,hostfwd=tcp:127.0.0.1:2222-:22 -device e1000,netdev=network0,mac=52:54:00:12:34:56"}
+RUNNER_ARGS=${AppRunnerArgs:-"-display none -serial stdio -netdev user,id=network0,hostfwd=tcp:127.0.0.1:2223-:22 -device e1000,netdev=network0,mac=52:54:00:12:34:56"}
 
 appdir=$1
 appname=${appdir}

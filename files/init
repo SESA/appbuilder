@@ -111,8 +111,9 @@ elif [[ ${APP_END} == sshd ]]; then
     # assumes you have installed ssh
     # Note this runs in the background
     # so we will go onto run a shell on
-    # console as well
-  sshd
+    # console as well.
+    # Need to run full path
+    /usr/sbin/sshd
 fi   
 
 # if we get here then we might as well start a shell :-) 
