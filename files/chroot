@@ -18,6 +18,7 @@ if ! mount -t devtmpfs -o mode=0755 udev /dev; then
   [[ -e /dev/random ]] || mknod /dev/random c 1 8
   [[ -e /dev/urandom ]] || mknod /dev/urandom c 1 9
 fi
+[[ -e /dev/pts ]] || mkdir /dev/pts
 mount -t devpts devpts /dev/pts
 
 env -i $ENV PS1='\w# ' /bin/bash --login --noprofile --norc
