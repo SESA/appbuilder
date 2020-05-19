@@ -23,7 +23,17 @@ fi
 (cd $filedir; git pull)
 
 sudo cp $filedir/init $refroot
+echo Updated init
 sudo cp $filedir/chroot $refroot
-[[ -d $refroot/root/.ssh ]] || sudo mkdir -p $refroot/root/.ssh && sudo chmod 0700 $refroot/root/.ssh
-sudo cp $filedir/ssh/* $refroot/root/.ssh
+echo Updated chroot
+if [[ ! -d $refroot/app ]]; then
+    sudo mkdir -p $refroot/app
+    sudo cp -r $filedir/app
+    echo updated app dir with default files
+fi
 
+if [[ -d $refroot/root/.ssh ]]; then
+    sudo mkdir -p $refroot/root/.ssh && sudo chmod 0700 $refroot/root/.ssh
+    sudo cp -r $filedir/ssh/* $refroot/root/.ssh
+    echo udpated root/.ssh with defaults
+fi
