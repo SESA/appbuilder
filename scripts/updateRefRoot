@@ -1,0 +1,29 @@
+#!/bin/bash
+#set -x
+USAGE="$0 <reference root>
+     This script updates a reference dir with current 
+     reference files from the appbuilder repository"
+
+dir=$(readlink -f  $0)
+dir=$(dirname $dir)
+filedir=${dir}/../files
+
+if [[ ! -e ${filedir}/init ]]; then
+  echo "ERROR: Failed to find appbuilder reference files" >> /dev/stderr
+  exit -1
+fi
+
+refroot=$1
+
+if [[ -z $refroot ]]; then
+   echo "$USAGE"
+   exit -1
+fi
+
+(cd $filedir; git pull)
+
+sudo cp $filedir/init $refroot
+sudo cp $filedir/chroot $refroot
+[[ -d $refroot/root/.ssh ]] || sudo mkdir -p $refroot/root/.ssh && sudo chmod 0700 $refroot/root/.ssh
+sudo cp $filedir/ssh/* $refroot/root/.ssh
+
