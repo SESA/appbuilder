@@ -1,0 +1,5 @@
+StrictHostKeyChecking no
+CheckHostIP no
+UserKnownHostsFile /dev/null
+LogLevel QUIET
+

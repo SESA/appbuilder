@@ -1,0 +1,5 @@
+mkdir --help
+ln --help
+cat --help
+halt --help
+ls /app
