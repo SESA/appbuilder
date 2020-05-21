@@ -1,7 +1,7 @@
 # Add commands that form the body of your experiment here
-#set -x
+set -x
 
-ECHO=echo
+#ECHO=echo
 
 INSMOD=insmod
 RMMOD=rmmod
@@ -16,7 +16,6 @@ ETHMODULE_WITHLOG=/app/ixgbe/ixgbe_log.ko
 CAT=cat
 
 NETCLASS="/24"
-TASKSETCPU=1
 
 DEVICE="$1"
 MYIP="$2"
@@ -25,14 +24,16 @@ ITRS="$4"
 MSGSIZES="$5"
 REPEAT="$6"
 ITERS="$7"
-CTLFILE="$8"
-PERTURBATION="$9"
+TASKSETCPU="$8"
+CTLFILE="$9"
+PERTURBATION="$10"
 
 DEVICE=${DEVICE:-"eth0"}
 MYIP=${MYIP:-"192.168.1.9"}
 ITRS=${ITRS:-"100 200 12"}
 MSGSIZES=${MSGSIZES:-"64,64 1024,1024 8192,8192 64,8192"}
 ITERS=${ITERS:-"5000"}
+TASKSETCPU=${TASKSETCPU:-"1"}
 CTLFILE=${CTLFILE:-"192.168.1.1:netpipeserver"}
 CTLFILE="${CTLFILE}.${MYIP}.output"
 PERTURBATION=${PERTURBATION:-"0"}
@@ -48,25 +49,25 @@ function configDevice()
 {
    itr=$1
 
-   ${ECHO} ${IP} link set eth0 down
-   ${ECHO} ${RMMOD} ixgbe
+    ${IP} link set eth0 down
+    ${RMMOD} ixgbe
 
    # initializes ixgbe device driver with no logging
-   ${ECHO} ${INSMOD} ${ETHMODULE}
+    ${INSMOD} ${ETHMODULE}
 
    #set ip:  
-   ${ECHO} ${IP} addr flush $DEVICE
+    ${IP} addr flush $DEVICE
    # make X configurable
-   ${ECHO} ${IP} addr add ${MYIP}${NETCLASS} dev $DEVICE
-   ${ECHO} ${IP} link set $DEVICE up
+    ${IP} addr add ${MYIP}${NETCLASS} dev $DEVICE
+    ${IP} link set $DEVICE up
 
    # set itr to be X - should make this parameter also configurable
-   ${ECHO} ${ETHTOOL} -C ${DEVICE} rx-usecs $itr
-   ${ECHO} ${IP} link set ${DEVICE} down
-   ${ECHO} ${IP} link set ${DEVICE} up
+    ${ETHTOOL} -C ${DEVICE} rx-usecs $itr
+    ${IP} link set ${DEVICE} down
+    ${IP} link set ${DEVICE} up
 
    # pin receive queues to cores
-   ${ECHO} ${SETAFFINITY} -x all ${DEVICE}
+    ${SETAFFINITY} -x all ${DEVICE}
 }
 
 
@@ -83,19 +84,15 @@ for itr in $ITRS; do
 		umsg=${msgSize##*,}
 		for ((i=0;i<$REPEAT; i++)); do
 		    echo "$MYIP: RUN:$i ${TASKSET} -c ${TASKSETCPU} ${NETPIPE}  -l ${lmsg} -u ${umsg} -n ${iters} -p ${p} -r -I"
-		    echo ${ECHO} ${TASKSET} -c ${TASKSETCPU} ${NETPIPE}  -l ${lmsg} -u ${umsg} -n ${iters} -p ${p} -r -I
-		    echo ${CAT} np.out
-		    echo ${CAT} np.out '>' /app/np.out.${i}_${msgSize}_${iters}_${p}
+		    ${TASKSET} -c ${TASKSETCPU} ${NETPIPE}  -l ${lmsg} -u ${umsg} -n ${iters} -p ${p} -r -I
 		    # dumps logs to dmesg
 		    if [[ ${ETHMODULE} == ${ETHMODULE_WITHLOG} ]]; then
-			${ECHO} ${ETHTOOL} -C ${DEVICE} DUMP_DYNAMIC_ITR 1
-			${ECHO} ${DMESG} -c
-			${ECHO} ${DMESG} -c '&>'  /app/np.out.dmesg_devicelog.${i}_${msgSize}_${iters}_${p}
+			 ${ETHTOOL} -C ${DEVICE} DUMP_DYNAMIC_ITR $((TASKSETCPU+1))
+			 ${DMESG} 
+			 ${DMESG} -c &>  /app/dmesg_devicelog.${itr}_${i}_${msgSize}_${iters}_${p}
 		    fi
 		done
 	    done
 	done
     done
 done
-
-
