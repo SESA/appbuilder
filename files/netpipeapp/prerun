@@ -1,0 +1,9 @@
+# Add commands you want to run before your experiment here
+
+# configure machine and kernel settings
+
+# bring experiment network iface
+
+# bring down control network iface
+# eg. ifconfig eth0 down
+
