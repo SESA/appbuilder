@@ -1,0 +1,47 @@
+#!/bin/bash
+EXPNAME=np
+Appliance=/Appliances/npApp
+TS=$(date +"%m.%d.%y-%H.%M.%S")
+TFTPROOT=/var/lib/tftpboot
+
+
+USAGE="doLinuxNetPipeExp <SERVER_NODE_NAME,SERVER_IP> <SERVER_EXTRA> <CLIENT_NODE_NAME,CLIENT_IP> <CLIENT_EXTRA> <ITRS> <MSGSIZES> <REPEAT> <ITERS> <TASKSETCPU>"
+
+SERVER=neu-5-8,192.168.1.8
+SERVER_EXTRA="console=tty0 console=ttyS0,115200"
+CLIENT=neu-5-9,192.168.1.9
+CLIENT_EXTRA="console=tty1 console=ttyS1,115200"
+
+
+ITRS="1 12"
+MSGSIZES="64,64 1024,1024"
+REPEAT=100
+ITERS=5000
+TASKSETCPU=1
+SERVER_LOGGING=LOG
+CLIENT_LOGGING=NOLOG
+
+EXPNAME=${EXPNAME}.$TS
+EXPDIR=$(mktemp -d  -p $(pwd) -t ${EXPNAME}_XXXXXX)
+
+#CLIENT_OUTFILE=${CI
+mknod ${CLIENT_OUTFILE} p
+mknod ${SERVER_OUTFILE} p
+
+# launch server
+runAppTftp npApp ${SERVER_NAME} ${SERVER_IP} "${SERVER_EXTRA} appArgs='SERVER eth0 ${SERVER_IP} ${SERVER_LOGGING}  \"${ITRS}\" \"${MSGSIZES}\" \"${REPEAT}\" \"${ITERS}\" \"${TASKSETCPU}\"'"
+
+# launch client
+runAppTftp npApp ${CLIENT_NAME} ${CLIENT_IP} "${CLIENT_EXTRA} appArgs='CLIENT:${SERVER_IP} eth0 ${CLIENT_IP} ${CLIENT_LOGGING} \"${ITRS}\" \"${MSGSIZES}\" \"${REPEAT}\" \"${ITERS}\" \"${TASKSETCPU}\"'"
+
+# wait for client
+cat ${CLIENT_OUTFILE} 
+
+# wait for server
+cat ${SERVER_OUTFILE}
+
+
+
+
+
+
