@@ -1,5 +1,0 @@
-# Add commands that form the body of your experiment here
-
-taskset -c 1 ./NPtcp_static -h 192.168.1.X -l msg -u X -n ITR -p 0 -r -I
-#		    ${CAT} np.out
-#		    ${CAT} np.out '>' /app/np.out.${i}_${msgSize}_${iters}_${p}

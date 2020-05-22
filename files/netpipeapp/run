@@ -1,2 +1,118 @@
 # Add commands that form the body of your experiment here
+#set -x
 
+ECHO=echo
+
+INSMOD=insmod
+RMMOD=rmmod
+ETHTOOL=/app/ethtool-4.5/ethtool
+SETAFFINITY=/app/perf/set_irq_affinity_ixgbe.sh
+IP=ip
+TASKSET=taskset
+DMESG=dmesg
+CAT=cat
+SLEEP=sleep
+NETPIPE=/app/NetPIPE-3.7.1/NPtcp_static
+ETHMODULE_ORIG=/app/ixgbe/ixgbe_orig.ko
+ETHMODULE_WITHLOG=/app/ixgbe/ixgbe_log.ko
+
+NETCLASS="/24"
+
+ROLE="${1}"
+DEVICE="${2}"
+MYIP="${3}"
+LOG="${4}"
+ITRS="${5}"
+MSGSIZES="${6}"
+REPEAT="${7}"
+ITERS="${8}"
+TASKSETCPU="${9}"
+CTLFILE="${10}"
+PERTURBATION="${11}"
+
+SERVER=${ROLE##*:}
+if [[ $ROLE == $SERVER ]]; then
+    ROLE="SERVER"
+    SERVER=""
+else
+    ROLE="CLIENT"
+fi
+
+DEVICE=${DEVICE:-"eth0"}
+MYIP=${MYIP:-"192.168.1.9"}
+ITRS=${ITRS:-"100 200 12"}
+MSGSIZES=${MSGSIZES:-"64,64 1024,1024 8192,8192 64,8192"}
+ITERS=${ITERS:-"5000"}
+TASKSETCPU=${TASKSETCPU:-"1"}
+CTLFILE=${CTLFILE:-"192.168.1.1:netpipeserver"}
+CTLFILE="${CTLFILE}.${MYIP}.output"
+PERTURBATION=${PERTURBATION:-"0"}
+REPEAT=${REPEAT:-100}
+
+if [[ ${LOG} == "NOLOG" ]]; then
+    ETHMODULE=${ETHMODULE_ORIG}
+else
+    ETHMODULE=${ETHMODULE_WITHLOG}
+fi
+
+function configDevice()
+{
+   itr=$1
+
+    ${ECHO} ${IP} link set eth0 down
+    ${ECHO} ${RMMOD} ixgbe
+
+   # initializes ixgbe device driver with no logging
+    ${ECHO} ${INSMOD} ${ETHMODULE}
+
+   #set ip:  
+    ${ECHO} ${IP} addr flush $DEVICE
+   # make X configurable
+    ${ECHO} ${IP} addr add ${MYIP}${NETCLASS} dev $DEVICE
+    ${ECHO} ${IP} link set $DEVICE up
+
+   # set itr to be X - should make this parameter also configurable
+    ${ECHO} ${ETHTOOL} -C ${DEVICE} rx-usecs $itr
+    ${ECHO} ${IP} link set ${DEVICE} down
+    ${ECHO} ${IP} link set ${DEVICE} up
+
+   # pin receive queues to cores
+   ${ECHO} ${SETAFFINITY} -x all ${DEVICE}
+}
+
+
+
+for itr in $ITRS; do
+
+    configDevice $itr
+    
+    # run netpipe for a fixed message size
+    for p in $PERTURBATION; do
+	for iters in $ITERS; do
+	    for msgSize in $MSGSIZES; do
+    		lmsg=${msgSize%%,*}
+		umsg=${msgSize##*,}
+		for ((i=0;i<$REPEAT; i++)); do
+		    if [[ ${ROLE} == "SERVER" ]]; then
+			echo "$ROLE:$MYIP: RUN:$i ${TASKSET} -c ${TASKSETCPU} ${NETPIPE}  -l ${lmsg} -u ${umsg} -n ${iters} -p ${p} -r -I"
+			${ECHO} ${TASKSET} -c ${TASKSETCPU} ${NETPIPE}  -l ${lmsg} -u ${umsg} -n ${iters} -p ${p} -r -I
+			# dumps logs to dmesg
+			if [[ ${ETHMODULE} == ${ETHMODULE_WITHLOG} ]]; then
+			    ${ECHO} ${ETHTOOL} -C ${DEVICE} DUMP_DYNAMIC_ITR $((TASKSETCPU+1))
+			    ${ECHO} ${DMESG} 
+			    ${ECHO} ${DMESG} -c '&>'  /app/dmesg_devicelog.${itr}_${i}_${msgSize}_${iters}_${p}
+			fi
+		    else
+			echo "$MYIP: $ROLE:$SERVER RUN:$i ${TASKSET} -c ${TASKSETCPU} ${NETPIPE} -h ${SERVER} -l ${lmsg} -u ${umsg} -n ${iters} -p ${p} -r -I"
+			while ! echo ${TASKSET} -c ${TASKSETCPU} ${NETPIPE} -h ${SERVER} -l ${lmsg} -u ${umsg} -n ${iters} -p ${p} -r -I; do
+			    echo "FAILED: Server not ready trying again ..."
+			    ${SLEEP} 10
+			done
+			${ECHO} ${CAT} np.out
+			${ECHO} ${CAT} np.out '>' /app/np.out.${itr}_${i}_${msgSize}_${iters}_${p}
+		    fi
+		done
+	    done
+	done
+    done
+done
