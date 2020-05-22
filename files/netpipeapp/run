@@ -1,7 +1,5 @@
 # Add commands that form the body of your experiment here
-#set -x
-
-ECHO=echo
+set -x
 
 INSMOD=insmod
 RMMOD=rmmod
@@ -59,25 +57,25 @@ function configDevice()
 {
    itr=$1
 
-    ${ECHO} ${IP} link set eth0 down
-    ${ECHO} ${RMMOD} ixgbe
+     ${IP} link set eth0 down
+     ${RMMOD} ixgbe
 
    # initializes ixgbe device driver with no logging
-    ${ECHO} ${INSMOD} ${ETHMODULE}
+     ${INSMOD} ${ETHMODULE}
 
    #set ip:  
-    ${ECHO} ${IP} addr flush $DEVICE
+     ${IP} addr flush $DEVICE
    # make X configurable
-    ${ECHO} ${IP} addr add ${MYIP}${NETCLASS} dev $DEVICE
-    ${ECHO} ${IP} link set $DEVICE up
+     ${IP} addr add ${MYIP}${NETCLASS} dev $DEVICE
+     ${IP} link set $DEVICE up
 
    # set itr to be X - should make this parameter also configurable
-    ${ECHO} ${ETHTOOL} -C ${DEVICE} rx-usecs $itr
-    ${ECHO} ${IP} link set ${DEVICE} down
-    ${ECHO} ${IP} link set ${DEVICE} up
+     ${ETHTOOL} -C ${DEVICE} rx-usecs $itr
+     ${IP} link set ${DEVICE} down
+     ${IP} link set ${DEVICE} up
 
    # pin receive queues to cores
-   ${ECHO} ${SETAFFINITY} -x all ${DEVICE}
+    ${SETAFFINITY} -x all ${DEVICE}
 }
 
 
@@ -95,21 +93,21 @@ for itr in $ITRS; do
 		for ((i=0;i<$REPEAT; i++)); do
 		    if [[ ${ROLE} == "SERVER" ]]; then
 			echo "$ROLE:$MYIP: RUN:$i ${TASKSET} -c ${TASKSETCPU} ${NETPIPE}  -l ${lmsg} -u ${umsg} -n ${iters} -p ${p} -r -I"
-			${ECHO} ${TASKSET} -c ${TASKSETCPU} ${NETPIPE}  -l ${lmsg} -u ${umsg} -n ${iters} -p ${p} -r -I
+			 ${TASKSET} -c ${TASKSETCPU} ${NETPIPE}  -l ${lmsg} -u ${umsg} -n ${iters} -p ${p} -r -I
 			# dumps logs to dmesg
 			if [[ ${ETHMODULE} == ${ETHMODULE_WITHLOG} ]]; then
-			    ${ECHO} ${ETHTOOL} -C ${DEVICE} DUMP_DYNAMIC_ITR $((TASKSETCPU+1))
-			    ${ECHO} ${DMESG} 
-			    ${ECHO} ${DMESG} -c '&>'  /app/dmesg_devicelog.${itr}_${i}_${msgSize}_${iters}_${p}
+			     ${ETHTOOL} -C ${DEVICE} DUMP_DYNAMIC_ITR $((TASKSETCPU+1))
+			     ${DMESG} 
+			     ${DMESG} -c &>  /app/dmesg_devicelog.${itr}_${i}_${msgSize}_${iters}_${p}
 			fi
 		    else
 			echo "$MYIP: $ROLE:$SERVER RUN:$i ${TASKSET} -c ${TASKSETCPU} ${NETPIPE} -h ${SERVER} -l ${lmsg} -u ${umsg} -n ${iters} -p ${p} -r -I"
-			while ! echo ${TASKSET} -c ${TASKSETCPU} ${NETPIPE} -h ${SERVER} -l ${lmsg} -u ${umsg} -n ${iters} -p ${p} -r -I; do
+			while ! ${TASKSET} -c ${TASKSETCPU} ${NETPIPE} -h ${SERVER} -l ${lmsg} -u ${umsg} -n ${iters} -p ${p} -r -I; do
 			    echo "FAILED: Server not ready trying again ..."
 			    ${SLEEP} 10
 			done
-			${ECHO} ${CAT} np.out
-			${ECHO} ${CAT} np.out '>' /app/np.out.${itr}_${i}_${msgSize}_${iters}_${p}
+			 ${CAT} np.out
+			 ${CAT} np.out > /app/np.out.${itr}_${i}_${msgSize}_${iters}_${p}
 		    fi
 		done
 	    done
