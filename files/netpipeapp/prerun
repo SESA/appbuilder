@@ -7,3 +7,19 @@
 # bring down control network iface
 # eg. ifconfig eth0 down
 
+# clears Linux boot printks once
+dmesg -c
+
+# disable hyperthreads
+/app/perf/disable_ht.sh
+
+# disable turbo boost by writing to msr 0x1a0 on Intel CPUs
+/app/perf/msr_disable_turboboost.sh
+
+# set CPU frequency to max
+/app/perf/msr_max_freq.sh
+
+#/app/perf/set_irq_affinity_ixgbe.sh -x all eth0
+
+rdmsr -a 0x199
+rdmsr -a 0x1a0
