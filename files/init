@@ -154,7 +154,7 @@ fi
 
 if [[ -e ${APP_RUN} ]]; then
   # run the app run file
-  . ${APP_RUN} ${APP_ARGS} >> ${APP_OUT}
+  eval . ${APP_RUN} ${APP_ARGS} >> ${APP_OUT}
 fi
 
 if [[ -e ${APP_POSTRUN} ]]; then

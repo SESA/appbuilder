@@ -1,0 +1,123 @@
+#!/bin/bash
+#set -x
+
+usage="$0 <appdir> <node> <ipaddr> [extra command line arguments]
+	  eg.  runApp Appliances/apps/genricApp \"appDebug\"
+	       runApp Appliances/apps/genricApp \"appEnd='bash'\"
+	       runApp Appliances/apps/genricApp \"appEnd='bash' appCmds='ls:mkdir -h:'\"
+	  real usage string goes here ;-)"
+
+SSH=ssh
+TS=$(date +"%m.%d.%y-%H.%M.%S")
+tftproot=/var/lib/tftpboot
+tftpGrubCfgDir=${tftproot}/pxelinux.cfg
+grubCfgFile=${tftpGrubCfgDir}/${node}
+tftpKernel=linux/bzImage.${node}
+tftpInitrd=linux/initrd.${node}
+hiluser=${HIL_USER:-handong}
+hilhost=${HIL_HOST:-"10.255.0.1"}
+hilrebootcmd=${HIL_REBOOT_CMD:-"hil node power cycle"}
+hilconsolecmd=${HIL_CONSOLE_CMD:-"hil node console show"}
+
+appdir=$1
+node=$2
+ip=$3
+
+appname=${appdir}
+appkernel=${appdir}/vmlinuz
+appinitrd=${appdir}/initrd
+appcmdline=${appdir}/cmdline
+
+function USAGE()
+{
+    echo "$usage" > /dev/stderr
+}
+
+if [[ ! -d $appdir ]]; then
+    echo "ERROR: bad app directory: $appdir"
+    USAGE
+    exit -1
+fi
+
+if [[ -z $node ]]; then
+    echo "ERROR: must specify node"
+    USAGE
+    exit -1
+fi
+
+if [[ -z $ip ]]; then
+    echo "ERROR: must specify ip"
+    USAGE
+    exit -1
+fi
+
+if [[ ! -e $appkernel ]]; then
+    echo "ERROR: could not locate kernel: $appkernel (don't forget to simlink your kernel)" > /dev/stderr
+    ls -l $appdir > /dev/stderr
+    USAGE
+    exit -1
+fi
+
+if [[ ! -e $appinitrd ]]; then
+    echo "ERROR: could not locate initrd: $appinitrd (don't forget to simlink your initrd)" > /dev/stderr
+    ls -l $appdir > /dev/stderr 
+    USAGE
+    exit -1
+fi
+
+if [[ ! -e $appcmdline ]]; then
+    echo "ERROR: could not locate cmdline: $appcmdline (don't forget to simlink your cmdlineargs)" > /dev/stderr
+    ls -l $appdir > /dev/stderr 
+    USAGE
+    exit -1
+fi
+cmdline="$(cat ${appcmdline})"
+
+shift 3
+
+tftproot=/var/lib/tftpboot
+tftpGrubCfgDir=${tftproot}/pxelinux.cfg
+grubCfgFile=${tftpGrubCfgDir}/${node}
+tftpKernel=linux/bzImage.${node}
+tftpInitrd=linux/initrd.${node}
+
+echo cp ${appkernel} ${tftproot}/${tftpKernel}
+if ! cp ${appkernel} ${tftproot}/${tftpKernel}; then
+   echo "ERROR: Failed to install ${appkernel} to ${tftproot}/${tftpKernel}" > /dev/stderr
+   exit -1
+fi
+ls -lH ${appkernel} ${tftproot}/${tftpKernel}
+
+echo cp ${appinitrd} ${tftproot}/${tftpInitrd}
+if ! cp ${appinitrd} ${tftproot}/${tftpInitrd}; then
+   echo "ERROR: Failed to install ${appinitrd} to ${tftproot}/${tftpInitrd}" > /dev/stderr
+   exit -1
+fi
+ls -Hl ${appinitrd} ${tftproot}/${tftpInitrd}
+
+if [[ -e ${grubCfgFile} ]]; then
+   echo  cp ${grubCfgFile} ${grubCfgFile}.${TS}_old
+fi
+
+cat > ${grubCfgFile} <<EOF
+DEFAULT vesamenu.c32
+TIMEOUT 1
+ONTIMEOUT linux
+PROMPT 0
+
+LABEL linux
+      MENU LABEL Linux-5.5.0
+      KERNEL ${tftpKernel}
+      APPEND initrd=${tftpInitrd} ${cmdline} $@
+      ENDTEXT
+
+EOF
+
+cat ${grubCfgFile}
+
+if ! ${SSH} ${hiluser}@${hilhost} ${hilrebootcmd} ${node}; then
+    echo "ERROR:  Failed to power cycle $node" > /dev/stderr
+    exit -1
+fi
+
+${SSH} ${hiluser}@${hilhost} ${hilconsolecmd} ${node}
