@@ -1,0 +1,36 @@
+#!/usr/bin/expect --
+package require cmdline
+
+set options {
+    {q          "quite: do not echo ouput from cmd to stdout"}
+}
+set usage "'when' runs a command until a pattern is emitted\n\
+\nexample:\nwhen f280 log hexdump /dev/urandom\n\n\
+options:\n\
+usage: when \[options] PATTERN LOGFILE COMMAND \[ARGS\]"
+
+if { [catch { array set params [::cmdline::getoptions argv $options $usage] } ERR ] } {
+    puts $ERR
+    exit -1
+}
+
+if {[llength $argv] < 4} {
+    puts [::cmdline::usage $options $usage]
+    exit 1
+}
+
+set pattern [ lindex $argv 0 ]
+set logfile [ lindex $argv 1 ]
+set command [lreplace $argv 0 1]
+
+set timeout 3600
+log_file -a -noappend $logfile
+if { $params(q) } { log_user 0 }
+
+eval spawn $command
+
+expect -re "$pattern" {
+    exit 0
+}
+
+exit 1

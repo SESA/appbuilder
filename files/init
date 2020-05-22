@@ -44,6 +44,13 @@ export APP_ARGS=''
 export APP_CMDS=''
 export APP_DEBUG=''
 
+export APP_MYMAC=''
+export APP_MYIP=''
+export APP_MYNODE=''
+export APP_CTLSERVER=''
+export APP_CTLDIR=''
+export APP_CTLFILE=''
+
 if [[ ! -e ${APP_DIR} ]]; then
   mkdir -p ${APP_DIR}
 fi
@@ -54,6 +61,55 @@ cmdline=$(cat /proc/cmdline)
 if [[ ${cmdline}  =~ ^.*appArgs=\'(.*)\'.*$ ]]; then
     APP_ARGS="${BASH_REMATCH[1]}"
     APP_ARGS=${APP_ARGS%%\'*}
+fi
+
+# Many of these are intended to be used by appfuncs in order to
+# standardize behaviour for networked applications.  By default
+# however we don't do anything with them in the init.
+# You are expected to source funcs.sh and use those functions that
+# are written against these variables
+
+# set the MAC that this node should use for its control communication
+if [[ ${cmdline}  =~ ^.*appMac=\'(.*)\'.*$ ]]; then
+    APP_MYMAC="${BASH_REMATCH[1]}"
+    APP_MYMAC=${APP_MYMAC%%\'*}
+fi
+
+# set a IP that this node will be used to communicate with
+# the control server and known by
+if [[ ${cmdline}  =~ ^.*appIp=\'(.*)\'.*$ ]]; then
+    APP_MYIP="${BASH_REMATCH[1]}"
+    APP_MYIP=${APP_MYIP%%\'*}
+fi
+
+# set a unique name for this node so that it can id itself
+# to the control server
+if [[ ${cmdline}  =~ ^.*appNode=\'(.*)\'.*$ ]]; then
+    APP_MYNODE="${BASH_REMATCH[1]}"
+    APP_MYNODE=${APP_MYNODE%%\'*}
+    PS1="${APP_NODE}> "
+fi
+
+# set to specify the control server that is controlling this
+# node... used for rendezvous etc.
+if [[ ${cmdline}  =~ ^.*appCtlServer=\'(.*)\'.*$ ]]; then
+    APP_CTLSERVER="${BASH_REMATCH[1]}"
+    APP_CTLSERVER=${APP_CTLSERVER%%\'*}
+fi
+
+# set a control directory for this node to deposit and rendezvous in
+# if unset it will default to ssh home dir
+if [[ ${cmdline}  =~ ^.*appCtlDir=\'(.*)\'.*$ ]]; then
+    APP_CTLDIR="${BASH_REMATCH[1]}"
+    APP_CTLDIR=${APP_CTLDIR%%\'*}
+fi
+
+# if you want to override the name of this nodes control
+# file set this otherwise it will be mynode-myip.out
+# see appfuncs.sh
+if [[ ${cmdline}  =~ ^.*appCtlFile=\'(.*)\'.*$ ]]; then
+    APP_CTLFILE="${BASH_REMATCH[1]}"
+    APP_CTLFILE=${APP_CTLDIR%%\'*}
 fi
 
 # PARSE OUT ANY APP COMMANDS TO RUN FROM COMMAND LINE
