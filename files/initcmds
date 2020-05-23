@@ -8,6 +8,7 @@ ip
 ssh --help
 scp --help
 /usr/sbin/sshd --help
+cat /root/.ssh/*
 cat /app/appfuncs.sh
 cat /app/prerun
 cat /app/run
