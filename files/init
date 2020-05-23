@@ -138,7 +138,7 @@ fi
 if [[ ${APP_DEBUG} == 1 ]]; then 
   # stop and start a shell at the console            
   echo "APP_DEBUG:  starting shell ... exit shell to continue init logic"
-  env -i $ENV /bin/bash --login --noprofile --norc
+  /bin/bash
 fi
 
 if [[ -e ${APP_PRERUN} ]]; then
@@ -181,6 +181,6 @@ elif [[ ${APP_END} == sshd ]]; then
 fi   
 
 # if we get here then we might as well start a shell :-) 
-env -i $ENV /bin/bash --login --noprofile --norc
+/bin/bash
 
 halt -p -f -d

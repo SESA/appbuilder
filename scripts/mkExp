@@ -21,7 +21,7 @@ EXP=$1
 export EXPBASEDIR=${EXP_TOPLEVEL}/${EXP}
 if [[ -e $EXPBASEDIR ]]; then
     echo "ERROR: $EXPBASEDIR exists.  Experment names must be unique so that a unique
-so that a unique experiment directory can be created"
+so that a unique experiment directory can be created" >> /dev/stderr
     usage
 fi
 

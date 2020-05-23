@@ -32,7 +32,7 @@ export EXP_TOPLEVEL=${EXP_TOPLEVEL:-$(pwd)}
 export APPBUILDERDIR=$(readlink -f  $0)
 export APPBUILDERDIR=$(dirname $APPBUILDERDIR)
 export APPBUILDERVM=\${EXP_TOPLEVEL}/AppBuilderVM.img
-PATH=\${APPBUILDERDIR}/scripts:${BASEDIR}/nbic:${SCRIPTSDIR}:$PATH
+PATH=\${APPBUILDERDIR}/scripts:${EXP_TOPLEVEL}/nbic:${SCRIPTSDIR}:$PATH
 EOF
 
 

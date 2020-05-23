@@ -72,7 +72,7 @@ function myIP()
 function myMAC()
 {
     local mymac=${APP_MYMAC}
-    local macs=( $(myMacs) )
+    local macs=( $(myMACS) )
     
     mymac=${macs[0]}
     echo ${mymac}
