@@ -130,6 +130,11 @@ if [[  ${cmdline} =~ ^.*appDebug.*$ ]]; then
   APP_DEBUG=1
 fi
 
+
+# source appfuncs.sh to allow standard app functions to be available
+# Functions are dependent on the APP_xxx variable settings
+[[ -e ${APP_DIR}/appfuncs.sh ]] && . ${APP_DIR}/appfuncs.sh 
+
 if [[ ${APP_DEBUG} == 1 ]]; then 
   # stop and start a shell at the console            
   echo "APP_DEBUG:  starting shell ... exit shell to continue init logic"
