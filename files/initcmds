@@ -8,5 +8,8 @@ ip
 ssh --help
 scp --help
 /usr/sbin/sshd --help
-
+cat /app/funcs.sh
+cat /app/prerun
+cat /app/run
+cat /app/postrun
 

@@ -21,6 +21,10 @@ fi
 [[ -e /dev/pts ]] || mkdir /dev/pts
 mount -t devpts devpts /dev/pts
 
+if [[ -e /initcmds ]]; then
+    . /initcmds
+fi
+
 env -i $ENV PS1='\w# ' /bin/bash --login --noprofile --norc
 
 
