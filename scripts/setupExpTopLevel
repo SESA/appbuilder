@@ -1,0 +1,41 @@
+#!/bin/bash
+#set -x
+
+EXP_TOPLEVEL=$1
+EXP_TOPLEVEL=${EXP_TOPLEVEL:-$(pwd)}
+APPBUILDERDIR=$(readlink -f  $0)
+APPBUILDERDIR=$(dirname $APPBUILDERDIR)
+
+NBICREPO=git@github.com:jappavoo/nbic.git
+APPBUILDERVM=${EXP_TOPLEVEL}/AppBuilderVM.img
+
+if [[ -e nbic ]]; then
+    (cd nbic; git pull)
+else
+    git clone ${NBICREPO}
+fi
+
+
+
+cat > README <<EOF
+This is a toplevel directory in which experiments are conducted and documented
+Please rsync a copy of this directory to a stable strorage service.
+
+Prior to doing any work you should source the exp.env file to ensure that 
+all the scripts and infrastructure will operate correctly
+
+EOF
+
+
+cat > exp.env <<EOF
+export EXP_TOPLEVEL=${EXP_TOPLEVEL:-$(pwd)}
+export APPBUILDERDIR=$(readlink -f  $0)
+export APPBUILDERDIR=$(dirname $APPBUILDERDIR)
+export APPBUILDERVM=\${EXP_TOPLEVEL}/AppBuilderVM.img
+PATH=\${APPBUILDERDIR}/scripts:${BASEDIR}/nbic:${SCRIPTSDIR}:$PATH
+EOF
+
+
+cat README
+
+[[ -e $APPBUILDERVM ]] || echo "Please place a copy of the app builder vm image in ${APPBUILDERVM}"

@@ -1,0 +1,96 @@
+#!/bin/bash
+
+USAGE="mkExp <ExperimentName>
+   Creates a new experiment relative to your top level experiment directory.
+   Use setupExp to create the top level.  Each experiment needs a unique name"
+
+function usage() {
+    echo "$USAGE"
+    exit -1
+}
+
+if [[ -z ${EXP_TOPLEVEL} || ! -d ${EXP_TOPLEVEL} ]]; then
+  echo "EXP_TOPLEVEL not set or exp toplevel does not exit: ${EXP_TOPLEVEL}" >> /dev/stderr
+  usage
+fi
+
+EXP=$1
+[[ -z $EXP ]] && usage
+
+
+export EXPBASEDIR=${EXP_TOPLEVEL}/${EXP}
+if [[ -e $EXPBASEDIR ]]; then
+    echo "ERROR: $EXPBASEDIR exists.  Experment names must be unique so that a unique
+so that a unique experiment directory can be created"
+    usage
+fi
+
+if ! mkdir ${EXPBASEDIR}; then
+    echo "ERROR: Failed to create ${EXPBASEDIR}" >> /dev/stderr
+    usage
+fi
+
+export SRCDIR=${EXPBASEDIR}/src
+export RUNDIR=${EXPBASEDIR}/runs
+export APPDIR=${EXPBASEDIR}/apps
+export DATADIR=${EXPBASEDIR}/data
+export RESULTSDIR=${EXPBASEDIR}/results
+export SCRIPTSDIR=${EXPBASEDIR}/scripts
+
+
+[[ -e ${SRCDIR} ]] || mkdir ${SRCDIR}
+[[ -e ${RUNDIR} ]] || mkdir ${RUNDIR}
+[[ -e ${APPDIR} ]] || mkdir ${APPDIR}
+[[ -e ${DATADIR} ]] || mkdir ${DATADIR}
+[[ -e ${RESULTSDIR} ]] || mkdir ${RESULTSDIR}
+[[ -e ${SCRIPTSDIR} ]] || mkdir ${SCRIPTSDIR}
+
+[[ -e ${EXPBASEDIR}/README ]] || cat > ${EXPBASEDIR}/README <<EOF
+Please replace this with documentation for this expeiment in 
+this file.  In general please do not delete an run as it is useful
+to have old output for all attempts.  Be sure to archive your 
+experiment directories often to a stable storage service.
+EOF
+
+[[ -e ${SRCDIR}/README ]] || cat > ${SRCDIR}/README <<EOF
+Please put all source material for the experiment under this directory
+This means copies of all source code and or data files that went into
+producing the artifacts that are being tested.  This might also include
+config files and checkouts of repositories.
+EOF
+[[ -e ${RUNDIR}/README ]] ||  cat > ${RUNDIR}/README <<EOF 
+This is the directory in which you should do runs for your experiment.
+runExp will by default create a new subdirectory here for each run.
+All recordings and raw data/output for a run should go into the run directory.
+  For Linux Appliances it is the run directory that the postrun should place 
+output for each node
+EOF
+[[ -e ${APPDIR}/README ]] || cat > ${APPDIR}/README <<EOF
+This is where the apps for you experiment should go.  Eventually we will
+have a mkApp that will create a template for an app as a sub directory 
+of this directory.
+EOF
+[[ -e ${DATADIR}/README ]] || cat > ${DATADIR}/README <<EOF
+This directory is where you should generate the data extracted from 
+the run directory of an experiment.  Please place any scripts or 
+documentation for how data is extracted from the run directory in the 
+experiment scripts directory eg. create an mkdata script that extracts the 
+data from the a run diectory an generates csv files and meta data files in a 
+data sub directory of the same name as the run.
+EOF
+[[ -e ${RESULTSDIR}/README ]] || cat > ${RESULTSDIR}/README <<EOF
+This directory should contain final result files and graphs generated
+from the data directory.  Please place scripts and documentation for this 
+process in the scripts directory
+EOF
+[[ -e ${SCRIPTSDIR}/README ]] || cat > ${SCRIPTSDIR}/README <<EOF
+Please put all scripts required to automate your experiment here and to
+process files.  Note you are encouraged to manage these in a repository.  
+But be sure that the verison used for the data gathering is within this 
+directory so that the exact methodology is preserved and that someone
+can go back and examine exactly what was done.  It is not even necessary
+that they will be able to recreate the runs as things may have changed
+but they need to be able to know exactly how the data and results 
+for experiment where run.  Of course ideally they should be able 
+to rerun the experiment runs and get new data.
+EOF

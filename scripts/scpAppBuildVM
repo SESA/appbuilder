@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if [[ $# == 0 ]]; then
+    echo "use localhost: to target buider vm.  Port is taken care of for you"
+    exit -1
+fi
+
+scp -P 2222 -o "USER=sesa" $@
