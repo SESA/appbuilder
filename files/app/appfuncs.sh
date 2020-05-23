@@ -180,7 +180,7 @@ function rendezvous()
 	   ${SCP} $src $dst
        else
 	   [[ -z $src ]] && src="READY"
-	   echo "$mynode : $myip : $src" | ${SSH} $sshhost "/bin/cat > $sshfile"
+	   echo "$mynode : $myip : $src" | ${SSH} $sshhost "/bin/cat >> $sshfile"
        fi
        # if rendezvous worked then quit esle retry 
        (( $? == 0 )) && break;

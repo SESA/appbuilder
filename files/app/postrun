@@ -1,6 +1,12 @@
 # Add commands you want to run after your experiment here
 
-# ifconfig eth0 up
-# /usr/sbin/sshd
-# scp -I key -r /app $APP_RESULTS_DESTINATION
-# halt -f -p -d
+# modify as you see fit.... default copies all of /app to the control
+# server and then rendezvous with the control server
+
+ctlIfaceUp
+
+saveResults
+
+rendezvous "postrun:DONE"
+
+

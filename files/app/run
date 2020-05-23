@@ -1,2 +1,29 @@
 # Add commands that form the body of your experiment here
 
+# some dummy work to test things out
+for a in "$@"; do
+    echo "run: ARG: $a"
+done
+
+cat /proc/cpuinfo
+ps -auxgwww
+mount
+ip link
+
+count=$1
+
+# confirm that first argument is a number
+if ! [[ $count =~ '^[0-9]+$' ]] ; then
+    #if not don't use it
+    count=''
+fi
+
+if [[ -z $count ]]; then
+    count=$(( ${RANDOM} % 10 ))    
+fi
+
+echo "TRIALS:"
+for ((i=0; i<$count; i++ )); do
+    echo "trial $i:"  $(ls -l /app)
+done
+
