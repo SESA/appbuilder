@@ -7,6 +7,6 @@ grep --help
 ip
 ssh --help
 scp --help
-/sbin/sshd --help
+/usr/sbin/sshd --help
 
 
