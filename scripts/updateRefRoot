@@ -40,3 +40,6 @@ if sudo bash -c "[[ ! -d $refroot/root/.ssh ]]"; then
     sudo cp -r $filedir/ssh/* $refroot/root/.ssh
     echo udpated root/.ssh with defaults
 fi
+
+sudo cp $filedir/sshd/sshd_config $refroot/root/etc/ssh/sshd_config
+echo Updated /etc/ssh/sshd_config
