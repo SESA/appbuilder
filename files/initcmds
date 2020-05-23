@@ -3,5 +3,10 @@ ln --help
 cat --help
 halt --help
 ls /app
+grep --help
 ip
+ssh --help
+scp --help
+/sbin/sshd --help
+
 
