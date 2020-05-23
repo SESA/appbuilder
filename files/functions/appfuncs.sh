@@ -99,15 +99,20 @@ function myCtlDir()
     echo ${APP_CTLDIR}
 }
 
-function myCtlFile()
+function myCtlId()
 {
+    echo "${mynode}-${myip}"
     local mynode=$(myNode)
     local myip=$(myIP)
+}
+
+function myCtlFile()
+{
     local host=$(myCtlServer)
     local dir=$(myCtlDir)
     local file=${APP_CTLFILE}
     
-    [[ -z $file ]] && file="${mynode}-${myip}.out"
+    [[ -z $file ]] && file="$(myCtlId).out"
 
     if [[ -z $host ]]; then
 	if [[ -z $dir ]]; then
@@ -168,13 +173,50 @@ function rendezvous()
        echo "ERROR: rendezvous could not determine a destination" > /dev/stderr
        return -1
    fi
-   
-   if [[ -n $src && -e $src ]]; then
-      ${SCP} $src $dst
-   else
-       [[ -z $src ]] && src="READY"
-       echo "$mynode : $myip : $src" | ${SSH} $sshhost "/bin/cat > $sshfile"
-   fi
+
+   # retry up to 5 times if the transfer fails
+   for (( i=0; i<5; i++ )); do
+       if [[ -n $src && -e $src ]]; then
+	   ${SCP} $src $dst
+       else
+	   [[ -z $src ]] && src="READY"
+	   echo "$mynode : $myip : $src" | ${SSH} $sshhost "/bin/cat > $sshfile"
+       fi
+       # if rendezvous worked then quit esle retry 
+       (( $? == 0 )) && break;
+   done
 #   set +x
    return 0
 }
+
+function saveResults()
+{
+    results="$@"
+
+    sshhost=$(myCtlServer)
+    sshdir=$(myCtlDir)
+
+    dst=${sshhost}:${sshdir}
+    
+    if (( $# == 0 )); then
+	results=${APP_DIR}
+    fi
+
+    for item in $results; do
+	if [[ -d $item ]]; then
+	    if ! ${SCP} -r $item $dst; then
+		echo "ERROR: failed to copy $ITEM to $dst" >> /dev/stderr
+	    fi
+	elif [[ -f $item ]]; then
+	    if ! ${SCP} $item $dst; then
+		echo "ERROR: failed to copy $ITEM to $dst" >> /dev/stderr
+	    fi	
+	else
+	    echo "$item" | ${SSH} $sshhost "/bin/cat >> $sshdir/extra"
+	    if (( $? != 0 )); then
+		echo "ERROR: failed to save $ITEM to $sshdir/extra"
+	    fi
+	fi
+    done
+}
+		
