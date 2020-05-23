@@ -9,8 +9,13 @@ ssh --help
 scp --help
 /usr/sbin/sshd --help
 cat /root/.ssh/*
+cat /etc/ssh/sshd_config
 cat /app/appfuncs.sh
 cat /app/prerun
 cat /app/run
 cat /app/postrun
+
+echo "to be on the safe side you might want to run /usr/sbin/sshd -d"
+echo "and test a login.  And also test a scp and ssh"
+
 
