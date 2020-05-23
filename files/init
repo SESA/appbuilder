@@ -48,6 +48,7 @@ export APP_MYMAC=''
 export APP_MYIP=''
 export APP_MYNODE=''
 export APP_CTLSERVER=''
+export APP_CTLUSER=''
 export APP_CTLDIR=''
 export APP_CTLFILE=''
 
@@ -95,6 +96,11 @@ fi
 if [[ ${cmdline}  =~ ^.*appCtlServer=\'(.*)\'.*$ ]]; then
     APP_CTLSERVER="${BASH_REMATCH[1]}"
     APP_CTLSERVER=${APP_CTLSERVER%%\'*}
+fi
+
+if [[ ${cmdline}  =~ ^.*appCtlUser=\'(.*)\'.*$ ]]; then
+    APP_CTLUSER="${BASH_REMATCH[1]}"
+    APP_CTLUSER=${APP_CTLUSER%%\'*}
 fi
 
 # set a control directory for this node to deposit and rendezvous in

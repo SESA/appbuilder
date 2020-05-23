@@ -89,6 +89,11 @@ function myNode()
     echo ${mynode}
 }
 
+function myCtlUser()
+{
+    echo ${APP_CTLUSER}
+}
+
 function myCtlServer()
 {
     echo ${APP_CTLSERVER}
@@ -101,9 +106,9 @@ function myCtlDir()
 
 function myCtlId()
 {
-    echo "${mynode}-${myip}"
     local mynode=$(myNode)
     local myip=$(myIP)
+    echo "${mynode}-${myip}"
 }
 
 function myCtlFile()
@@ -151,7 +156,7 @@ function ctlIfaceUp()
 
 function rendezvous()
 {
-#   set -x
+   set -x
    local src=$1
    local dst=$2
    local myip=$3
@@ -163,11 +168,13 @@ function rendezvous()
    if [[ -z ${dst} ]]; then
        dst=$(myCtlFile)
    else
+       local ctluser=$(myCtlUser)
        dst=${dst}:$(myCtlFile)
+       [[ -n $ctluser ]] && dst=${ctluser}@${dst}
    fi
 
-   sshhost=${dst%%:*}
-   sshfile=${dst##*:}
+   local sshhost=${dst%%:*}
+   local sshfile=${dst##*:}
 
    if [[ $sshhost == $sshfile ]]; then
        echo "ERROR: rendezvous could not determine a destination" > /dev/stderr
@@ -191,12 +198,14 @@ function rendezvous()
 
 function saveResults()
 {
-    results="$@"
+    local results="$@"
 
-    sshhost=$(myCtlServer)
-    sshdir=$(myCtlDir)
+    local sshhost=$(myCtlServer)
+    local sshdir=$(myCtlDir)
 
-    dst=${sshhost}:${sshdir}
+    local dst=${sshhost}:${sshdir}
+    local ctluser=$(myCtlUser)
+    [[ -n $ctluser ]] && dst=${ctluser}@${dst}
     
     if (( $# == 0 )); then
 	results=${APP_DIR}
