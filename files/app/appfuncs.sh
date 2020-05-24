@@ -168,8 +168,7 @@ function rendezvous()
    if [[ -z ${dst} ]]; then
        dst=$(myCtlFile)
        local ctluser=$(myCtlUser)
-       dst=${dst}:$(myCtlFile)
-       [[ -n $ctluser ]] && dst=${ctluser}@${dst}
+        [[ -n $ctluser ]] && dst=${ctluser}@${dst}
    fi
 
    local sshhost=${dst%%:*}
