@@ -1,6 +1,7 @@
 #!/bin/bash
+set -x
 
-USAGE="runExp <exp> <app>"
+USAGE="runExp <exp> <app> [extra app args]"
 
 function usage() {
     echo "$USAGE"
@@ -16,7 +17,9 @@ EXP=$1
 APP=$2
 [[ -z $EXP ]] && usage
 
+[[ -z $APP ]] && usage
 
+shift 2
 
 export EXPBASEDIR=${EXP_TOPLEVEL}/${EXP}
 if [[ ! -e $EXPBASEDIR ]]; then
@@ -38,7 +41,7 @@ export RUNDIR=$(mktemp -d  -p ${RUNSDIR} -t ${RUN}_XXXXXX)
 
 (
   cd $RUNDIR
-  runApp $APPDIR/$APP &> tee $RUNDIR/runApp.log &
+  runApp $APPDIR/$APP $@ &> $RUNDIR/runApp.log &
 )	 
 
 echo $RUNDIR
