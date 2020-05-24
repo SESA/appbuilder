@@ -149,7 +149,7 @@ fi
 
 if [[ -e ${APP_PRERUN} ]]; then
   # run command within this shell context  
-  . ${APP_PRERUN} &>> ${APP_DIR}/app_out
+  . ${APP_PRERUN} &>> ${APP_DIR}/${APP_OUT}
 fi
 
 # process any additional commands that we are supposed to here

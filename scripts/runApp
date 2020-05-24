@@ -8,7 +8,7 @@ VMMAC=${VMMAC:-"52:54:00:12:34:56"}
 VMIP=${VMIP:-"192.168.1.5/24"}
 VMNODEDIR=${VMNODEDIR:-$(pwd)}
 
-mknod ${VMNODEDIR}/${VMNODE}-${VMIP}.out p
+mknod ${VMNODEDIR}/${VMNODE}-${VMIP%%/*}.out p
 
 MYUSER=${MYUSER:-$USER}
 MYIP=${MYIP:-"192.168.1.2"}

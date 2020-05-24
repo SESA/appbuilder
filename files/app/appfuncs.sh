@@ -138,7 +138,7 @@ function ctlIfaceDown()
 {
     local mymac=$(myMAC)
     local iface=$(MAC2Interface $mymac)
-    ${IP} link $iface down
+    ${IP} link set $iface down
 }
 
 function ctlIfaceUp()
