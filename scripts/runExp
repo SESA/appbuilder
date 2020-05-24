@@ -1,0 +1,50 @@
+#!/bin/bash
+
+USAGE="runExp <exp> <app>"
+
+function usage() {
+    echo "$USAGE"
+    exit -1
+}
+
+if [[ -z ${EXP_TOPLEVEL} || ! -d ${EXP_TOPLEVEL} ]]; then
+  echo "EXP_TOPLEVEL not set or exp toplevel does not exit: ${EXP_TOPLEVEL}" >> /dev/stderr
+  usage
+fi
+
+EXP=$1
+APP=$2
+[[ -z $EXP ]] && usage
+
+
+
+export EXPBASEDIR=${EXP_TOPLEVEL}/${EXP}
+if [[ ! -e $EXPBASEDIR ]]; then
+    echo "ERROR: $EXPBASEDIR does not exist. Have you run mkExp?" >> /dev/stderr
+    usage
+fi
+
+export SRCDIR=${EXPBASEDIR}/src
+export RUNSDIR=${EXPBASEDIR}/runs
+export APPDIR=${EXPBASEDIR}/apps
+export DATADIR=${EXPBASEDIR}/data
+export RESULTSDIR=${EXPBASEDIR}/results
+export SCRIPTSDIR=${EXPBASEDIR}/scripts
+
+RUN=$(date +"%m.%d.%y-%H.%M.%S")
+
+export RUNDIR=$(mktemp -d  -p ${RUNSDIR} -t ${RUN}_XXXXXX)
+
+
+(
+  cd $RUNDIR
+  runApp $APPDIR/$APP &> tee $RUNDIR/runApp.log &
+)	 
+
+echo $RUNDIR
+sleep 1
+
+while ! cat $RUNDIR/*.out; do
+  sleep 1
+done
+
