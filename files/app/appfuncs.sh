@@ -156,7 +156,7 @@ function ctlIfaceUp()
 
 function rendezvous()
 {
-   set -x
+#   set -x
    local src=$1
    local dst=$2
    local myip=$3
@@ -197,22 +197,21 @@ function rendezvous()
 
 function saveResults()
 {
-    local results="$@"
-
     local myid=$(myCtlId)
     local sshhost=$(myCtlServer)
+    local ctluser=$(myCtlUser)
+    [[ -n $ctluser ]] && sshhost=${ctluser}@${sshhost}
     local sshdir=$(myCtlDir)/${myid}
 
     local dst=${sshhost}:${sshdir}
-    local ctluser=$(myCtlUser)
-    [[ -n $ctluser ]] && dst=${ctluser}@${dst}
+
     
     if (( $# == 0 )); then
 	results=${APP_DIR}
     fi
 
     ${SSH} $sshhost "/bin/mkdir -p $sshdir"
-    for item in $results; do
+    for item in $results "$@"; do
 	if [[ -d $item ]]; then
 	    if ! ${SCP} -r $item $dst; then
 		echo "ERROR: failed to copy $ITEM to $dst" >> /dev/stderr
