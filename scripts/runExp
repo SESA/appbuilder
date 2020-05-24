@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+#set -x
 
 USAGE="runExp <exp> <app> [extra app args]"
 
