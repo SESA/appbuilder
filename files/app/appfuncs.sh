@@ -167,7 +167,6 @@ function rendezvous()
 
    if [[ -z ${dst} ]]; then
        dst=$(myCtlFile)
-   else
        local ctluser=$(myCtlUser)
        dst=${dst}:$(myCtlFile)
        [[ -n $ctluser ]] && dst=${ctluser}@${dst}
@@ -200,8 +199,9 @@ function saveResults()
 {
     local results="$@"
 
+    local myid=$(myCtlId)
     local sshhost=$(myCtlServer)
-    local sshdir=$(myCtlDir)
+    local sshdir=$(myCtlDir)/${myid}
 
     local dst=${sshhost}:${sshdir}
     local ctluser=$(myCtlUser)
@@ -211,6 +211,7 @@ function saveResults()
 	results=${APP_DIR}
     fi
 
+    ${SSH} $sshhost "/bin/mkdir -p $sshdir"
     for item in $results; do
 	if [[ -d $item ]]; then
 	    if ! ${SCP} -r $item $dst; then
