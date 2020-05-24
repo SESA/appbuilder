@@ -2,13 +2,16 @@
 #set -x
 
 VMNET="192.168.1.0/24"
-VMMAC="52:54:00:12:34:56"
-VMIP="192.168.1.5/24"
-VMNODE="vm-0-0"
-VMNODEDIR=$(pwd)
 
-MYUSER=$USER
-MYIP="192.168.1.2"
+VMNODE=${VMNODE:-"vm-0-0"}
+VMMAC=${VMMAC:-"52:54:00:12:34:56"}
+VMIP=${VMIP:-"192.168.1.5/24"}
+VMNODEDIR=${VMNODEDIR:-$(pwd)}
+
+mknod ${VMNODEDIR}/${VMNODE}-${VMIP}.out p
+
+MYUSER=${MYUSER:-$USER}
+MYIP=${MYIP:-"192.168.1.2"}
 
 usage="$0 <appdir> [extra command line arguments]
 	  eg.  runApp Appliances/apps/genricApp \"appDebug\"
