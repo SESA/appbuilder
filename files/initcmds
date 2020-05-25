@@ -7,6 +7,8 @@ grep --help
 ip
 ssh --help
 scp --help
+ps --help
+vi --help
 /usr/sbin/sshd --help
 cat /root/.ssh/*
 cat /etc/ssh/sshd_config
