@@ -8,6 +8,7 @@ NODE=${NODE:-"vm-0-0"}
 MAC=${MAC:-"52:54:00:12:34:56"}
 IP=${IP:-"192.168.1.5/24"}
 NODEDIR=${NODEDIR:-$(pwd)}
+MEMSIZE=${MEMSIZE:-8192}
 
 mknod ${NODEDIR}/${NODE}-${IP%%/*}.out p
 
@@ -67,10 +68,12 @@ cmdline="$(cat ${appcmdline})"
 shift
 
 echo ${RUNNER} ${RUNNER_ARGS} \
-	  -kernel ${appkernel}\
+          -m ${MEMSIZE} \
+          -kernel ${appkernel}\
 	  -initrd ${appinitrd}\
 	  -append "appMac='${MAC}' appIp='${IP}' appNode='${NODE}' appCtlServer='${MYIP}' appCtlUser='${MYUSER}' appCtlDir='${NODEDIR}' ${cmdline} $@"
 ${RUNNER} ${RUNNER_ARGS} \
+	  -m ${MEMSIZE} \
 	  -kernel ${appkernel}\
 	  -initrd ${appinitrd}\
 	  -append "appMac='${MAC}' appIp='${IP}' appNode='${NODE}' appCtlServer='${MYIP}' appCtlUser='${MYUSER}' appCtlDir='${NODEDIR}' ${cmdline} $@"
