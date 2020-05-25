@@ -88,7 +88,7 @@ fi
 if [[ ${cmdline}  =~ ^.*appNode=\'(.*)\'.*$ ]]; then
     APP_MYNODE="${BASH_REMATCH[1]}"
     APP_MYNODE=${APP_MYNODE%%\'*}
-    hostname ${APP_NODE}
+    hostname ${APP_MYNODE}
     PS1="${APP_NODE}> "
 fi
 
