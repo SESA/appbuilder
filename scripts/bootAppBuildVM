@@ -23,5 +23,5 @@ kvm -enable-kvm \
     -hda $disk \
     -smp 4  \
     -m 2048 \
-    -netdev user,id=network0,hostfwd=tcp:$SSHLOCAL-:22 \
+    -netdev user,id=network0,net=192.168.1.0/24,hostfwd=tcp:$SSHLOCAL-:22 \
     -device e1000,netdev=network0,mac=52:54:00:12:34:56

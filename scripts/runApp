@@ -2,7 +2,7 @@
 #set -x
 
 #DEFAULTS
-
+SSHLOCALFWD=${SSHLOCALFWD:-"127.0.0.1:2223"}
 NET="192.168.1.0/24"
 NODE=${NODE:-"vm-0-0"}
 MAC=${MAC:-"52:54:00:12:34:56"}
@@ -21,7 +21,9 @@ usage="$0 <appdir> [extra command line arguments]
 	  real usage string goes here ;-)"
 
 RUNNER=kvm
-RUNNER_ARGS=${AppRunnerArgs:-"-display none -serial stdio -netdev user,id=network0,net=${NET},hostfwd=tcp:127.0.0.1:2223-:22 -device e1000,netdev=network0,mac=${MAC}"}
+# Given that we want control of the ip addresses explicilty to better simulate hardware setups we
+# explicitly specify both the host and guest ip addresses
+RUNNER_ARGS=${AppRunnerArgs:-"-display none -serial stdio -netdev user,id=network0,net=${NET},host=${MYIP},hostfwd=tcp:${SSHLOCALFWD}-${IP%%/*}:22 -device e1000,netdev=network0,mac=${MAC}"}
 
 appdir=$1
 appname=${appdir}

@@ -2,6 +2,7 @@ mkdir --help
 ln --help
 cat --help
 halt --help
+hostname --help
 ls /app
 grep --help
 ip
