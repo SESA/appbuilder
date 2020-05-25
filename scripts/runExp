@@ -15,6 +15,7 @@ fi
 
 EXP=$1
 APP=$2
+RUNAPP=${RUNAPP:-"runApp"}
 [[ -z $EXP ]] && usage
 
 [[ -z $APP ]] && usage
@@ -41,7 +42,7 @@ export RUNDIR=$(mktemp -d  -p ${RUNSDIR} -t ${RUN}_XXXXXX)
 
 (
   cd $RUNDIR
-  runApp $APPDIR/$APP $@ &> $RUNDIR/runApp.log &
+  ${RUNAPP} $APPDIR/$APP $@ &> $RUNDIR/runApp.log &
 )	 
 
 echo $RUNDIR

@@ -1,28 +1,23 @@
 #!/bin/bash
 #set -x
+NET="192.168.1.0/24"
+NODE=${NODE:-""}
+MAC=${MAC:-""}
+IP=${IP:-""}
+NODEDIR=${NODEDIR:-$(pwd)}
 
-usage="$0 <appdir> <node> <ipaddr> [extra command line arguments]
+mknod ${NODEDIR}/${NODE}-${IP%%/*}.out p
+
+MYUSER=${MYUSER:-$USER}
+MYIP=${MYIP:-"192.168.1.2"}
+
+usage="NODE=<node> IP=<ip/netclass> $0 <appdir> [extra command line arguments]
 	  eg.  runApp Appliances/apps/genricApp \"appDebug\"
 	       runApp Appliances/apps/genricApp \"appEnd='bash'\"
 	       runApp Appliances/apps/genricApp \"appEnd='bash' appCmds='ls:mkdir -h:'\"
 	  real usage string goes here ;-)"
 
-SSH=ssh
-TS=$(date +"%m.%d.%y-%H.%M.%S")
-tftproot=/var/lib/tftpboot
-tftpGrubCfgDir=${tftproot}/pxelinux.cfg
-grubCfgFile=${tftpGrubCfgDir}/${node}
-tftpKernel=linux/bzImage.${node}
-tftpInitrd=linux/initrd.${node}
-hiluser=${HIL_USER:-handong}
-hilhost=${HIL_HOST:-"10.255.0.1"}
-hilrebootcmd=${HIL_REBOOT_CMD:-"hil node power cycle"}
-hilconsolecmd=${HIL_CONSOLE_CMD:-"hil node console show"}
-
 appdir=$1
-node=$2
-ip=$3
-
 appname=${appdir}
 appkernel=${appdir}/vmlinuz
 appinitrd=${appdir}/initrd
@@ -35,18 +30,6 @@ function USAGE()
 
 if [[ ! -d $appdir ]]; then
     echo "ERROR: bad app directory: $appdir"
-    USAGE
-    exit -1
-fi
-
-if [[ -z $node ]]; then
-    echo "ERROR: must specify node"
-    USAGE
-    exit -1
-fi
-
-if [[ -z $ip ]]; then
-    echo "ERROR: must specify ip"
     USAGE
     exit -1
 fi
@@ -73,14 +56,51 @@ if [[ ! -e $appcmdline ]]; then
 fi
 cmdline="$(cat ${appcmdline})"
 
-shift 3
+shift 
 
+# stuff unique to boot nodes via tftp
+SSH=ssh
 tftproot=/var/lib/tftpboot
 tftpGrubCfgDir=${tftproot}/pxelinux.cfg
 grubCfgFile=${tftpGrubCfgDir}/${node}
 tftpKernel=linux/bzImage.${node}
 tftpInitrd=linux/initrd.${node}
+hiluser=${HIL_USER:-handong}
+hilhost=${HIL_HOST:-"10.255.0.1"}
+hilinfocmd=${HIL_INFO_CMD:-"hil node show"}
+hilrebootcmd=${HIL_REBOOT_CMD:-"hil node power cycle"}
+hilconsolecmd=${HIL_CONSOLE_CMD:-"hil node console show"}
 
+if [[ -z $NODE ]]; then
+    echo "ERROR: must specify node"
+    USAGE
+    exit -1
+fi
+
+if [[ -z $IP ]]; then
+    echo "ERROR: must specify ip"
+    USAGE
+    exit -1
+fi
+
+TS=$(date +"%m.%d.%y-%H.%M.%S")
+tftproot=/var/lib/tftpboot
+tftpGrubCfgDir=${tftproot}/pxelinux.cfg
+grubCfgFile=${tftpGrubCfgDir}/${NODE}
+tftpKernel=linux/bzImage.${NODE}
+tftpInitrd=linux/initrd.${NODE}
+
+# if mac is empty then try and figure it out from tftproot
+if [[ -z $MAC ]]; then
+    macs=$(${SSH} ${hiluser}@${hilhost} ${hilinfocmd} ${node} | echo $(egrep 'Macaddr|Networks') | tr -d ' ')
+    macs=${macs//|Macaddr|/}
+    macs=${macs//||Networks|/ }
+    macs=${macs//|/$'\n'}
+    echo "${macs}"
+    exit -1
+fi
+
+# install kernel
 echo cp ${appkernel} ${tftproot}/${tftpKernel}
 if ! cp ${appkernel} ${tftproot}/${tftpKernel}; then
    echo "ERROR: Failed to install ${appkernel} to ${tftproot}/${tftpKernel}" > /dev/stderr
@@ -88,6 +108,7 @@ if ! cp ${appkernel} ${tftproot}/${tftpKernel}; then
 fi
 ls -lH ${appkernel} ${tftproot}/${tftpKernel}
 
+# install initrd
 echo cp ${appinitrd} ${tftproot}/${tftpInitrd}
 if ! cp ${appinitrd} ${tftproot}/${tftpInitrd}; then
    echo "ERROR: Failed to install ${appinitrd} to ${tftproot}/${tftpInitrd}" > /dev/stderr
@@ -95,6 +116,7 @@ if ! cp ${appinitrd} ${tftproot}/${tftpInitrd}; then
 fi
 ls -Hl ${appinitrd} ${tftproot}/${tftpInitrd}
 
+# backup old grub
 if [[ -e ${grubCfgFile} ]]; then
    echo  cp ${grubCfgFile} ${grubCfgFile}.${TS}_old
 fi
@@ -108,7 +130,7 @@ PROMPT 0
 LABEL linux
       MENU LABEL Linux-5.5.0
       KERNEL ${tftpKernel}
-      APPEND initrd=${tftpInitrd} ${cmdline} $@
+      APPEND initrd=${tftpInitrd}  appMac='${MAC}' appIp='${IP}' appNode='${NODE}' appCtlServer='${MYIP}' appCtlUser='${MYUSER}' appCtlDir='${NODEDIR}' ${cmdline} $@
       ENDTEXT
 
 EOF
