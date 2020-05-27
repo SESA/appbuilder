@@ -35,20 +35,72 @@ export DATADIR=${EXPBASEDIR}/data
 export RESULTSDIR=${EXPBASEDIR}/results
 export SCRIPTSDIR=${EXPBASEDIR}/scripts
 
+
+# TRAP on all normal terminations HUP/1, INT/2, QUIT/3, TERM/15, ERR
+#trap cleanup 1 2 3 15 EXIT
+trap "cleanup $$" EXIT
+
+
+function killchildren 
+{
+#  echo "killchildren : $1"
+  ppid=$1
+  if [[ -z $ppid ]]
+  then
+    ppid=$$
+  fi
+  children=$(ps --ppid $ppid -o '%p %a' --no-headings)
+  echo "$children" | while read pid args
+  do
+    if [[ -n $pid ]]
+    then
+#      echo "killing: $pid : $args"
+      kill -9 $pid > /dev/null 2>&1
+    fi
+  done
+}
+
+function cleanup
+{
+#  echo "cleaning up" > /dev/stderr
+  killchildren
+}
+
 RUN=$(date +"%m.%d.%y-%H.%M.%S")
 
-export RUNDIR=$(mktemp -d  -p ${RUNSDIR} -t ${RUN}_XXXXXX)
+export RUNDIR=$(mktemp -d  -p ${RUNSDIR} -t XXXXXX_${RUN})
 
 
-(
-  cd $RUNDIR
-  ${RUNAPP} $APPDIR/$APP $@ &> $RUNDIR/runApp.log &
-)	 
+cd $RUNDIR
+if [[ -z $SILENT ]]; then
+     ${RUNAPP} $APPDIR/$APP $@ |& tee $RUNDIR/runApp.log &
+else
+     ${RUNAPP} $APPDIR/$APP $@ >${RUNDIR}/runApp.log 2>&1 &
+     
+fi	       
+wpid=$(jobs -p %%)	 
 
 echo $RUNDIR
+
+# Kludge give child time to start up
 sleep 1
 
+if [[ -z $(ps --pid $wpid --no-headers -o pid) ]]; then
+  echo "ERROR: runApp failed to start"
+  echo $RUNDIR/runApp.log
+  [[ -n $SILENT ]] && cat $RUNDIR/runApp.log	
+  exit -1
+fi
+
 while ! cat $RUNDIR/*.out; do
+  if [[ -z $(ps --pid $wpid --no-headers -o pid) ]]; then
+     echo "ERROR: runApp Seems to have ended with no status file"
+     echo $RUNDIR/runApp.log
+     [[ -n $SILENT ]] && cat $RUNDIR/runApp.log 
+     exit -1
+  fi
   sleep 1
 done
 
+# Give the nodes a little time to clean itself up
+sleep 2

@@ -10,7 +10,9 @@ IP=${IP:-"192.168.1.5/24"}
 NODEDIR=${NODEDIR:-$(pwd)}
 MEMSIZE=${MEMSIZE:-8192}
 
-mknod ${NODEDIR}/${NODE}-${IP%%/*}.out p
+PIPEFILE=${PIPEFILE:-${NODEDIR}/${NODE}-${IP%%/*}.out}
+
+mknod ${PIPEFILE} p
 
 MYUSER=${MYUSER:-$USER}
 MYIP=${MYIP:-"192.168.1.2"}
@@ -31,6 +33,36 @@ appname=${appdir}
 appkernel=${appdir}/vmlinuz
 appinitrd=${appdir}/initrd
 appcmdline=${appdir}/cmdline
+
+# TRAP on all normal terminations HUP/1, INT/2, QUIT/3, TERM/15, ERR
+#trap cleanup 1 2 3 15 EXIT
+trap "cleanup $$" EXIT
+
+
+function killchildren 
+{
+#  echo "killchildren : $1"
+  ppid=$1
+  if [[ -z $ppid ]]
+  then
+    ppid=$$
+  fi
+  children=$(ps --ppid $ppid -o '%p %a' --no-headings)
+  echo "$children" | while read pid args
+  do
+    if [[ -n $pid ]]
+    then
+#      echo "killing: $pid : $args"
+      kill -9 $pid > /dev/null 2>&1
+    fi
+  done
+}
+
+function cleanup
+{
+#  echo "cleaning up" > /dev/stderr
+  killchildren
+}
 
 function USAGE()
 {
