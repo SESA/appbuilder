@@ -1,5 +1,5 @@
 #!/bin/bash
-#set -x
+set -x
 NET="192.168.1.0/24"
 NODE=${NODE:-""}
 MAC=${MAC:-""}
