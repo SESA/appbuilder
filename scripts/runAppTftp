@@ -60,11 +60,6 @@ shift
 
 # stuff unique to boot nodes via tftp
 SSH=ssh
-tftproot=/var/lib/tftpboot
-tftpGrubCfgDir=${tftproot}/pxelinux.cfg
-grubCfgFile=${tftpGrubCfgDir}/${node}
-tftpKernel=linux/bzImage.${node}
-tftpInitrd=linux/initrd.${node}
 hiluser=${HIL_USER:-handong}
 hilhost=${HIL_HOST:-"10.255.0.1"}
 hilinfocmd=${HIL_INFO_CMD:-"hil node show"}
@@ -92,7 +87,7 @@ tftpInitrd=linux/initrd.${NODE}
 
 # if mac is empty then try and figure it out from tftproot
 if [[ -z $MAC ]]; then
-    macs=$(${SSH} ${hiluser}@${hilhost} ${hilinfocmd} ${node} | echo $(egrep 'Macaddr|Networks') | tr -d ' ')
+    macs=$(${SSH} ${hiluser}@${hilhost} ${hilinfocmd} ${NODE} | echo $(egrep 'Macaddr|Networks') | tr -d ' ')
     macs=${macs//|Macaddr|/}
     macs=${macs//||Networks|/ }
     macs=${macs//|/$'\n'}
@@ -137,9 +132,9 @@ EOF
 
 cat ${grubCfgFile}
 
-if ! ${SSH} ${hiluser}@${hilhost} ${hilrebootcmd} ${node}; then
-    echo "ERROR:  Failed to power cycle $node" > /dev/stderr
+if ! ${SSH} ${hiluser}@${hilhost} ${hilrebootcmd} ${NODE}; then
+    echo "ERROR:  Failed to power cycle $NODE" > /dev/stderr
     exit -1
 fi
 
-${SSH} ${hiluser}@${hilhost} ${hilconsolecmd} ${node}
+${SSH} ${hiluser}@${hilhost} ${hilconsolecmd} ${NODE}

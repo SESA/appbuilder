@@ -13,7 +13,7 @@ ip link
 count=$1
 
 # confirm that first argument is a number
-if ! [[ $count =~ '^[0-9]+$' ]] ; then
+if ! [[ $count =~ ^[0-9]+$ ]] ; then
     #if not don't use it
     count=''
 fi
