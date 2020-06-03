@@ -1,6 +1,6 @@
 #!/bin/bash
-#set -x
-NET="192.168.1.0/24"
+set -x
+NET=${NET:-"192.168.1.0/24"}
 NODE=${NODE:-""}
 MAC=${MAC:-""}
 IP=${IP:-""}
@@ -91,6 +91,7 @@ if [[ -z $MAC ]]; then
     macs=${macs//|Macaddr|/}
     macs=${macs//||Networks|/ }
     macs=${macs//|/$'\n'}
+    echo "ERROR: Must specify a MAC address for this node's control network connection"
     echo "${macs}"
     exit -1
 fi
