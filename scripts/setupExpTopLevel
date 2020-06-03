@@ -6,7 +6,7 @@ EXP_TOPLEVEL=${EXP_TOPLEVEL:-$(pwd)}
 APPBUILDERDIR=$(readlink -f  $0)
 APPBUILDERDIR=$(dirname $APPBUILDERDIR)
 
-NBICREPO=git@github.com:jappavoo/nbic.git
+NBICREPO=https://github.com/jappavoo/nbic.git
 APPBUILDERVM=${EXP_TOPLEVEL}/AppBuilderVM.img
 
 if [[ -e nbic ]]; then
