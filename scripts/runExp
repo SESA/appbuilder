@@ -1,7 +1,19 @@
 #!/bin/bash
 #set -x
 
-USAGE="runExp <exp> [<app> [extra app args]]"
+
+export RUNSCRIPT=${RUNSCRIPT:-runTrial}
+
+USAGE="runExp <exp> [<app> [extra app args]]
+  This assumes that you have setup a top level experiment directory (using 
+  setupExpTopLevel), constructed an experiment with mkExp, and configured it 
+  with one more Apps and optionally a runTrail script.
+   <exp> :  The experment to run if no other arguments are specified 
+         :  the execution of a trail will be done by executing a $RUNSCRIPT 
+         :  within the exp's script directory if it exists
+   [<app> [extra app args]] : if specified then the app will be run as the experiment trail with an extra args passed"
+  
+   
 
 function usage() {
     echo "$USAGE"
@@ -15,12 +27,7 @@ fi
 
 EXP=$1
 APP=$2
-RUNAPP=${RUNAPP:-"runApp"}
-[[ -z $EXP ]] && usage
 
-[[ -z $APP ]] && usage
-
-shift 2
 
 export EXPBASEDIR=${EXP_TOPLEVEL}/${EXP}
 if [[ ! -e $EXPBASEDIR ]]; then
@@ -28,6 +35,7 @@ if [[ ! -e $EXPBASEDIR ]]; then
     usage
 fi
 
+export RUNAPP=${RUNAPP:-"runApp"}
 export SRCDIR=${EXPBASEDIR}/src
 export RUNSDIR=${EXPBASEDIR}/runs
 export APPDIR=${EXPBASEDIR}/apps
@@ -35,6 +43,44 @@ export DATADIR=${EXPBASEDIR}/data
 export RESULTSDIR=${EXPBASEDIR}/results
 export SCRIPTSDIR=${EXPBASEDIR}/scripts
 
+
+[[ -z $EXP ]] && usage
+
+if [[ -z $APP ]]; then
+  if [[ ! -e ${SCRIPTSDIR}/${RUNSCRIPT} ]]; then
+      echo "ERROR: No app specified and could not find ${SCRIPTSDIR}/${RUNSCRIPT}" > /dev/stderr
+      exit -1
+  fi
+fi
+
+shift 2
+
+function rendezvous()
+{
+   local outfile=$1 
+   local wpid=$2
+
+   outfile=${outfile%%.pipe}.pipe
+   
+   # Kludge give child time to start up
+   if [[ -n $wpid ]]; then
+      sleep 1
+      if [[ -z $(ps --pid $wpid --no-headers -o pid) ]]; then
+          echo "ERROR: runApp failed to start" > /dev/stderr
+          return -1
+      fi
+   fi
+
+   while ! cat $RUNDIR/$outfile; do
+      if [[ -n $wpid && -z $(ps --pid $wpid --no-headers -o pid) ]]; then
+       echo "ERROR: runApp Seems to have ended with no status file"
+       return -1
+      fi
+      sleep 1
+   done
+   
+   return 0
+}
 
 # TRAP on all normal terminations HUP/1, INT/2, QUIT/3, TERM/15, ERR
 #trap cleanup 1 2 3 15 EXIT
@@ -69,38 +115,22 @@ function cleanup
 RUN=$(date +"%m.%d.%y-%H.%M.%S")
 
 export RUNDIR=$(mktemp -d  -p ${RUNSDIR} -t XXXXXX_${RUN})
-
-
-cd $RUNDIR
-if [[ -z $SILENT ]]; then
-     ${RUNAPP} $APPDIR/$APP $@ |& tee $RUNDIR/runApp.log &
-else
-     ${RUNAPP} $APPDIR/$APP $@ >${RUNDIR}/runApp.log 2>&1 &
-     
-fi	       
-wpid=$(jobs -p %%)	 
-
 echo $RUNDIR
 
-# Kludge give child time to start up
-sleep 1
+cd $RUNDIR
 
-if [[ -z $(ps --pid $wpid --no-headers -o pid) ]]; then
-  echo "ERROR: runApp failed to start"
-  echo $RUNDIR/runApp.log
-  [[ -n $SILENT ]] && cat $RUNDIR/runApp.log	
-  exit -1
+if [[ -z $APP ]]; then
+  . ${SCRIPTSDIR}/${RUNSCRIPT}
+else
+  if [[ -z $SILENT ]]; then
+     NODE="vm-0.0" ${RUNAPP} $APPDIR/$APP $@ |& tee $RUNDIR/runApp.log &
+  else
+     NODE="vm-0.0" ${RUNAPP} $APPDIR/$APP $@ >${RUNDIR}/runApp.log 2>&1 &     
+  fi	       
+  wpid=$(jobs -p %%)	 
+  rendezvous vm-0.0 $wpid
 fi
 
-while ! cat $RUNDIR/*.out; do
-  if [[ -z $(ps --pid $wpid --no-headers -o pid) ]]; then
-     echo "ERROR: runApp Seems to have ended with no status file"
-     echo $RUNDIR/runApp.log
-     [[ -n $SILENT ]] && cat $RUNDIR/runApp.log 
-     exit -1
-  fi
-  sleep 1
-done
 
 # Give the nodes a little time to clean itself up
 sleep 2

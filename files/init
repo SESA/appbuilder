@@ -116,7 +116,7 @@ fi
 # see appfuncs.sh
 if [[ ${cmdline}  =~ ^.*appCtlFile=\'(.*)\'.*$ ]]; then
     APP_CTLFILE="${BASH_REMATCH[1]}"
-    APP_CTLFILE=${APP_CTLDIR%%\'*}
+    APP_CTLFILE=${APP_CTLFILE%%\'*}
 fi
 
 # PARSE OUT ANY APP COMMANDS TO RUN FROM COMMAND LINE

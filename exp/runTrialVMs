@@ -1,0 +1,7 @@
+SSHLOCALFWD=127.0.0.1:2222 NODE="vm-0.0" ${RUNAPP} $APPDIR/TestApp "appArgs='10'" >${RUNDIR}/runApp1.log 2>&1 &
+pid1=$(jobs -p %%)   
+SSHLOCALFWD=127.0.0.1:2232 NODE="vm-0.1" ${RUNAPP} $APPDIR/TestApp "appArgs='5'" >${RUNDIR}/runApp2.log 2>&1 &     
+pid2=$(jobs -p %%)
+
+rendezvous vm-0.0 $pid1
+rendezvous vm-0.1 $pid2
