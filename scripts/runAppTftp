@@ -4,9 +4,12 @@ NET=${NET:-"192.168.1.0/24"}
 NODE=${NODE:-""}
 MAC=${MAC:-""}
 IP=${IP:-""}
-NODEDIR=${NODEDIR:-$(pwd)}
+RUNDIR=${NODEDIR:-$(pwd)}
 
-mknod ${NODEDIR}/${NODE}-${IP%%/*}.out p
+CTLFILE=${CTLFILE:-${NODE}}
+CTLFILE=${CTLFILE%%.pipe}.pipe
+
+mknod ${RUNDIR}/${CTLFILE} p
 
 MYUSER=${MYUSER:-$USER}
 MYIP=${MYIP:-"192.168.1.2"}
@@ -126,7 +129,7 @@ PROMPT 0
 LABEL linux
       MENU LABEL Linux-5.5.0
       KERNEL ${tftpKernel}
-      APPEND initrd=${tftpInitrd}  appMac='${MAC}' appIp='${IP}' appNode='${NODE}' appCtlServer='${MYIP}' appCtlUser='${MYUSER}' appCtlDir='${NODEDIR}' ${cmdline} $@
+      APPEND initrd=${tftpInitrd}  appMac='${MAC}' appIp='${IP}' appNode='${NODE}' appCtlServer='${MYIP}' appCtlUser='${MYUSER}' appCtlDir='${NODEDIR}' appCtlFile='${CTLFILE}' ${cmdline} $@
       ENDTEXT
 
 EOF
