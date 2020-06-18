@@ -1,0 +1,27 @@
+#!/bin/bash
+#set -x
+disk=$1
+disk=${disk:-$APPBUILDERVM}
+SSHLOCAL="127.0.0.1:2222"
+
+if [[ -z $disk ]]; then
+    if [[ -n $APPBUILDERVM  ]]; then
+	echo "ERROR: missing $APPBUILDERVM"
+	echo "USAGE: bootAppBuildVM
+   Boot your $APPBUILDERVM to construct debain based initrds and linux kernels"
+    else
+	echo "ERROR:  must specificy buidervm disk image"
+	echo "USAGE: bootAppBuildVM <disk image>"
+    fi
+    exit -1
+fi
+    
+echo "SSH PORT 22 forwarded to $SSHLOCAL. Use this to ssh to VM"
+
+kvm -enable-kvm \
+    -nographic \
+    -hda $disk \
+    -smp 16  \
+    -m 4096 \
+    -netdev user,id=network0,hostfwd=tcp:$SSHLOCAL-:22 \
+    -device e1000,netdev=network0,mac=52:54:00:12:34:56

@@ -1,5 +1,5 @@
 #!/bin/bash
-#set -x
+set -x
 NET=${NET:-"192.168.1.0/24"}
 NODE=${NODE:-""}
 MAC=${MAC:-""}
@@ -141,4 +141,4 @@ if ! ${SSH} ${hiluser}@${hilhost} ${hilrebootcmd} ${NODE}; then
     exit -1
 fi
 
-${SSH} ${hiluser}@${hilhost} ${hilconsolecmd} ${NODE}
+#${SSH} ${hiluser}@${hilhost} ${hilconsolecmd} ${NODE}
