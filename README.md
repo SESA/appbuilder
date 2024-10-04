@@ -172,9 +172,11 @@ We will want this repo in the VM -- it also includes some scripts to help easy
 the setup process.  The next few steps must be done by hand on the vm.
 
 ```
-$ ssh-keygen
-$ git clone https://github.com/SESA/appbuilder.git
-$ appbuilder/scripts/basicVMsetup
+sudo apt update
+sudo apt install ssh git
+ssh-keygen
+git clone https://github.com/SESA/appbuilder.git
+appbuilder/scripts/basicVMsetup
 ```
 
 Assuming successfull clone you can now use the scripts in appbuilder/scripts to

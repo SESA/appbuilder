@@ -5,7 +5,7 @@ sudo apt-get install git \
   build-essential bc kmod cpio flex libncurses5-dev libelf-dev libssl-dev dwarves bison \
   cdebootstrap
 cd ~
-git clone https://github.com/SESA/appbuilder.git
+#git clone https://github.com/SESA/appbuilder.git
 if ! git clone https://github.com/jappavoo/nbic.git; then
   cat <<EOF
 Please note the nbic repo is private and you will need jappavoo to give you access.  Eg.
