@@ -1,1 +1,57 @@
-kvm -hda debian10.4.base.img -cdrom debian-10.4.0-amd64-netinst.iso  -m 2048 -netdev user,id=network0 -device e1000,netdev=network0,mac=52:54:00:12:34:56
+#!/bin/bash
+scriptdir=$(dirname $(realpath $0))
+URL=https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/
+CD=$1
+IMG=$2
+MEMORY=${MEMORY:-2048}
+IMGSIZE=${IMGSIZE:-200G}
+IMGTYPE=${IMGTYPE:-qcow2}
+
+[[ -z $IMG ]] && IMG=${CD%-*}.img
+
+KVMCMD=$(type -p kvm)
+
+[[ -z $KVMCMD ]] && KVMCMD=$(type -p qemu-kvm)
+
+[[ -z $KVMCMD ]] && {
+   echo "ERROR: kvm not found in path"
+   exit -1
+}
+
+echo "using $KVMCMD : CD=$CD IMG=$IMG"
+
+if [[ -z $CD ]]; then
+   echo "please go please go hear and pick an image $URL"
+   exit -1
+fi
+
+if [[ ! -a $CD ]]; then
+   if ! wget -c $URL/$CD; then
+      echo "ERROR: can't get install cd $URL/$CD"
+      exit -1
+   fi
+fi
+
+if [[ ! -a  $CD ]]; then
+   echo "ERROR: hmm still can't $CD please go get it manually and pass in as first argument"
+   exit -1
+fi
+      
+   
+if [[ ! -a $IMG ]]; then
+   echo "creating the disk img"
+   qemu-img create -f $IMGTYPE $IMG $IMGSIZE
+fi
+echo "$IMG:"
+qemu-img info $IMG
+
+#if ! xhost; then 
+#   echo "Installing debain is not stable with out graphics so you must have X working"
+#   exit;
+#fi	
+
+[[ -z $GRAPHICS ]] && GRAPHICS=:0
+
+VM_CD=${CD} VM_GRAPHICS=$GRAPHICS VM_MEMORY=$MEMORY VM_CPUS=1 $scriptdir/startVM $IMG
+#CD=$CD  MEMORY=$MEMORY CPUS=1 $scriptdir/startVM $IMG
+

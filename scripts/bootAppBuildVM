@@ -1,8 +1,9 @@
 #!/bin/bash
 #set -x
+scriptdir=$(dirname $(realpath $0))
 disk=$1
 disk=${disk:-$APPBUILDERVM}
-SSHLOCAL="127.0.0.1:2222"
+APPBUILDER_SSHLOCAL=${APPBUILDER_SSHLOCAL:-"127.0.0.1:2222"}
 
 if [[ -z $disk ]]; then
     if [[ -n $APPBUILDERVM  ]]; then
@@ -18,10 +19,4 @@ fi
     
 echo "SSH PORT 22 forwarded to $SSHLOCAL. Use this to ssh to VM"
 
-kvm -enable-kvm \
-    -nographic \
-    -hda $disk \
-    -smp 4  \
-    -m 2048 \
-    -netdev user,id=network0,net=192.168.1.0/24,hostfwd=tcp:$SSHLOCAL-:22 \
-    -device e1000,netdev=network0,mac=52:54:00:12:34:56
+VM_SSH=true VM_CD='' VM_GRAPHICS='' VM_MEMORY=${APPBUILDER_MEMORY:-2048} VM_SSHLOCAL=${APPBUILDER_SSHLOCAL} VM_CPUS=${APPBUILDER_CPUS:-4} $scriptdir/startVM $disk

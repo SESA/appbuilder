@@ -1,5 +1,11 @@
 #!/bin/bash
+#set -x
+APPBUILDER_SSHLOCAL=${APPBUILDER_SSHLOCAL:-"127.0.0.1:2222"}
+APPBUILDER_USER=${APPBUILDER_USER:-"sesa"}
 
-SSHLOCAL=127.0.0.1
+port=${APPBUILDER_SSHLOCAL##*:}
+host=${APPBUILDER_SSHLOCAL%%:*}
 
-ssh -p 2222 sesa@${SSHLOCAL} $@
+set -u
+
+ssh -p $port ${APPBUILDER_USER}@${host} $@

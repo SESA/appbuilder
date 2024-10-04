@@ -1,0 +1,25 @@
+#!/bin/bash
+
+sudo apt install linux-source build-dep linux
+[[ ! -d ~/Kernels ]] && mkdir ~/Kernels
+cd ~/Kernels
+
+[[ ! -d linux-source-$(uname -r) ]] && \
+  tar xaf /usr/src/linux-source-$(uname -r).tar.xz
+
+# use system config as basis for our kernel build
+cp  /boot/config-$(uname -r) .config
+
+# turn off module signing... I think this is right
+scripts/config --disable MODULE_SIG
+scripts/config --set-str SYSTEM_TRUSTED_KEYS ''
+scripts/config --disable SYSTEM_TRUSTED_KEYRING
+scripts/config --disable MODULE_SIG_ALL
+scripts/config --set-str MODULE_SIG_KEY ''
+
+# set parallelism
+export MAKEFLAGS=-j$(nproc)
+
+make oldconfig
+make clean
+make bindeb-pkg

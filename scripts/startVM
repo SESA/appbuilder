@@ -1,0 +1,57 @@
+#!/bin/bash
+#set -x
+IMG=$1
+VM_MEMORY=${VM_MEMORY:-2048}
+VM_CPUS=${VM_CPUS:-4}
+VM_SSHLOCAL=${VM_SSHLOCAL:-"127.0.0.1:2222"}
+VM_GRAPHICS=${VM_GRAPHICS:-""}
+VM_SSH=${VM_SSH:-"1"}
+
+[[ -z $IMG ]] && {
+   echo "must specify image to boot"
+   exit -1
+}	
+
+KVMCMD=$(type -p kvm)
+
+[[ -z $KVMCMD ]] && KVMCMD=$(type -p qemu-kvm)
+
+[[ -z $KVMCMD ]] && {
+   echo "ERROR: kvm not found in path"
+   exit -1
+}
+
+echo "using $KVMCMD : CD=$VM_CD IMG=$IMG"
+
+if [[ -n ${VM_GRAPHICS} ]]; then
+    VM_GRAPHICS="-k en-us -S -serial mon:stdio -vnc ${VM_GRAPHICS},password=on"
+    echo "You must set the password in the monitor and then connect your vnc"
+    echo "client to the $VM_GRAPHICS and then continue the boot.  Eg."
+    echo "(qemu) set_password vnc vnc0000vnc"
+    echo "<now connect your vnc client to $GRAPHICS>"
+    echo "(qemu) cont" 
+else
+    VM_GRAPHICS="-nographic -serial mon:stdio"
+fi
+
+if [[ -n ${VM_SSH} ]]; then
+   NET="-netdev user,id=network0,net=192.168.1.0/24,hostfwd=tcp:$APPBUILDER_SSHLOCAL-:22"
+else
+   NET="-netdev user,id=network0"
+fi
+
+if [[ -n $VM_CD ]]; then
+    CDROM="-cdrom ${VM_CD}"
+else
+    CDROM=""
+fi
+
+echo "starting qemu"
+$KVMCMD -enable-kvm \
+        -hda ${IMG} \
+	$CDROM  \
+	${VM_GRAPHICS} \
+	-smp ${VM_CPUS} \
+ 	-m ${VM_MEMORY} \
+	${NET} \
+ 	-device e1000,netdev=network0,mac=52:54:00:12:34:56
