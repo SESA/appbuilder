@@ -15,20 +15,93 @@ To simplify our lives, we will have one booting appliance and have a script in i
 ## Where stuff is
 
 The base image you need for this is in a shared google drive called
-[SESAAppBuilder](https://drive.google.com/drive/u/0/folders/10GYMi65Ikn2eYitcCgnaGde25ldxBOxm).
-Inside there the base image all the work has been done in is called:
 
-    debian10.4.base.img
+[SESAAppBuilder](https://www.cs.bu.edu/~jappavoo/Resources/vms/AppBuilder.tar.bz2).
+Inside you will find the base vm image along with the iso used to install it.
 
-Just download that image to get eveything running. The work is done as "sesa", and both "root" and "sesa" have the non-secure sesa password.
+```
+    debian-<ver>-amd64-netinst.iso  debian-<ver>-amd64.img
+```
 
-The files and scripts are all checked out in the VM, as well as the nbic environment, but please push back changes that will be valuable.
+All the work to build images will be done from within a VM instance started with this image.
+The work you do within the VM will be done as the "sesa" and "root" user, and both "root" and "sesa" have the non-secure sesa password.
+
+This repo is checked out in the VM, as well as the nbic environment, but please push back changes that will be valuable.
 
 In files, you can see the script run by nbic to initialize an environment, and the default init file run by an appliance.  Will discuss the interesting features of these files [below](#using).
 
 Unders scripts we have:
 - bootAppBuildVM: a simple script to run the app builder VM that you download from google drive
 - ssh2AppBuildVM: a script to log into the VM
+
+## Starting the AppBuilder VM
+
+Once you have downloaded and unpacked the Appbuilder VM you can start it using the the script bootAppBuilderVM.  Eg.
+```
+$ scripts/bootAppBuilderVM  debian-12.7.0-amd64.img
+```
+
+The window you run this command should turn into the console for for your VM instance.
+At this point you should be able to log in using the sesa user.  If you don't have the password you will need to talk to someone
+in the know.
+
+## Accessing the VM instance and copying files
+
+You can use the thin wrapper scripts to simplify your access to the vm instance.
+
+### ssh to vm
+
+`sshAppBuilderVM` is a simple script that invokes ssh for you to access the VM.  It assumes that bootAppBuilderVM was used to launch it, which
+creates a port tunnel between a fixed localhost and port 22 of the vm.  Eg.
+
+```
+$ scripts/ssh2AppBuildVM 
+sesa@127.0.0.1's password: 
+Linux appbuilder 6.1.0-25-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.106-3 (2024-08-26) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Wed Oct  2 14:57:17 2024 from 192.168.1.2
+sesa@appbuilder:~$
+```
+
+There is nothing magically to the script is nothing more than:
+```
+#!/bin/bash
+#set -x
+APPBUILDER_SSHLOCAL=${APPBUILDER_SSHLOCAL:-"127.0.0.1:2222"}
+APPBUILDER_USER=${APPBUILDER_USER:-"sesa"}
+
+port=${APPBUILDER_SSHLOCAL##*:}
+host=${APPBUILDER_SSHLOCAL%%:*}
+
+set -u
+
+ssh -p $port ${APPBUILDER_USER}@${host} $@
+
+```
+
+### copying files to and from the vm
+
+Similar to sshing there is a script, `scripts/scpAppBuildVM`, that simplifies copying
+files between your host and the VM. Eg.
+
+```
+$ scripts/scpAppBuildVM README.md localhost:
+sesa@localhost's password: 
+README.md                                     100%   11KB   5.8MB/s   00:00    
+$ scripts/scpAppBuildVM localhost:README.md /tmp/foo
+sesa@localhost's password: 
+README.md                                     100%   11KB   8.7MB/s   00:00    
+$
+```
+
+# 
+
 
 Examples or stuff not yet done:
 - mkapp: which is bogus, but will include some of the stuff describe below to create a new apps
@@ -39,14 +112,6 @@ Examples or stuff not yet done:
 
 
 
-When you log into the vm key directories as sesa user are:
- - appbuilder : this repo
- - nics : a checkout of the nics github repo
- - cmds  - a file of commands you want to run in the chroot environment, see [below](#Using).
- - Appliances : the appliances should go here:
- - cpios: a set of cpio file systems that can be converted into ram file systems - you can easily merge/add edit these using cpios-unpack...
-   - apps: should put here for each appliance the command line used to run it, the kernel, and the cpios it should use.
-  - buster-reference-root : the root file system that is used to generate the appliance cpios/initramfs
 
 ## Building appliances
 
@@ -73,84 +138,93 @@ Please place new cpios in the cpios directory and create appliances in the apps 
 You should create a new appliance in the apps directory, putting in your commmand line and kernel.
 
 
-## <a name="using"></a>Using an appliance
-
-To run your appliance you should have the program invoked by a script
-called "run" in the app directory of the root file system. Just copy
-your appliances out of the appliance builder, zip up your ram file
-system, and run kvm, e.g, for an appliance called bash
-
-    mkdir myApp
-    scp -r -P 2222 sesa@127.0.0.1:Appliances/cpios/bash.cpio myApp
-    cd myApp
-    gzip -9 bash.cpio
-    ln -s bash.cpio.gz initrd
-    do the same for your kernel and command line arguments
-    cd ..
-    runApp myApp
-
-
-If you look at the buster-reference-root file system, you will see an "app" directory.  Please put in that app directory any application specific code you want to execute.  The init script is designed to automatically run the following files from this directory:
-- "prerun" suff  you want before your appliance
-- "run": run your appliances
-- "postrun" stuff, e.g., to copy your data output
-
-Init is customized by a set of arguments you add to kernel command line.  
-  - appCmd: ":" seperated set of commands. These are run after prerun and befure run phase.
-  - appEnd: can be halt (default), reboot, or sshd
-  - appDebug: will stop on a shell before running prerun
-  - appArgs: arguments that are passed to run
-
-Examples:
-
-     appCmds='ls /app:ifconfig eth0 ..:mount ..'
-     scp -r -P 2222 sesa@127.0.0.1:Appliances/cpios/bash.cpio .
-     kvm -serial stdio -kernel vmlinuz-5.5.17  -initrd bash.cpio.gz -append "console=ttyS0"
-     kvm -serial stdio -kernel vmlinuz-5.5.17  -initrd bash.cpio.gz -append "console=ttyS0 appDebug"
-     kvm -serial stdio -kernel vmlinuz-5.5.17  -initrd bash.cpio.gz -append "console=ttyS0 appEnd=bash"
-     kvm -serial stdio -kernel vmlinuz-5.5.17  -initrd bash.cpio.gz -append "console=ttyS0 appEnd='bash'"
-     kvm -serial stdio -kernel vmlinuz-5.5.17  -initrd bash.cpio.gz -append "console=ttyS0 appCmds='mkdir --help:ls :'"
-     kvm -serial stdio -kernel vmlinuz-5.5.17  -initrd bash.cpio.gz -append "console=ttyS0 appEnd='bash' appCmds='mkdir --help:ls:ls /app:'"
-
-     runApp does the above for you
-
-## Kernel construction
-
-In the kvm builder VM there is all the infrastructure to compile the 5.5 series kernels with our configs.
-
-Call me for details.
-
-You should build your kernels and copy them out for your apps
 
 
 ## Creating Appliance Builder host You can safely ignore this
 
 Details you don't need unless you are trying to build your own appBuilderVM
 
-The script directory also has a set of scripts you should not need to use unless you are creating your own app builder.
-- installAppBuildVM: command used to create the VM from iso
+If you need to rebuild the AppBuilderVM the following is a guide.  A common reason for this might be to upgrade to a new distro release.
 
-Base appliance from here:
-https://www.addictivetips.com/ubuntu-linux-tips/get-linux-kernel-5-3-on-debian-10-stable/
+### Build the base VM image
 
-Rest of this section, you can pretty much ignore, its not up to date, but copied a bunch of history into this.
 
-These are the commands executed after that:
+1.Use the `scripts/installAppBuildVM <path to install CD/iso> [path of vm disk image to create]`. This script creates a bootable disk image.
+> Eg. `scripts/installAppBuilderVM debian-12.7.0-amd64-netinst.iso`
 
-     10  sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
-     11  sudo nano -w /etc/apt/sources.list
-     12  sudo apt update
-     13  apt search linux-image
+It has several built in defaults that you can overide.
+      - If no image path is specified it will create the disk image in the directory that you run the command in with the the same name as the iso with `.img` appended to it.
+      - VM Memory size used during install.  Default is 2048 Kb. Set MEMORY env variable to overide.  Eg.
+         - `MEMORY=4096 scripts/installAppBuilderVM debian-12.7.0-amd64-netinst.iso`
+      - Target disk image size can be set by overriding `IMGSIZE`.  The default is 200G. Eg.
+      	 - `IMGSIZE=420G scripts/installAppBuilderVM debian-12.7.0-amd64-netinst.iso`
+      - Simiarlarly for the type of the disk image can be set with IMGTYPE.  The default is QCOW2. Eg.
+         - `IMGTYPE=raw scripts/installAppBuilderVM debian-12.7.0-amd64-netinst.iso`
+	 
+2. At this point you need to complete the install and then start it up and complete the setup.
+   Eg. once installed you would start it up with something like:
+       - `APPBUILDER_MEMORY=8G scripts/bootAppBuildVM AppBuildVM/debian-12.7.0-amd64.img`
+       - The log in via ssh eg. `scripts/ssh2AppBuildVM`
 
-We install desktop to ensure that we have ne1000 nic and other device drivers (cloud version is limited set of drivers"
+### Basic Setup
 
-     apt search linux-image | grep buster-backports
-     sudo apt install linux-headers-5.5.0-0.bpo.2-amd64
+We will want this repo in the VM -- it also includes some scripts to help easy
+the setup process.  The next few steps must be done by hand on the vm.
 
-Now checkout this repo and the nbic repo for building appliances
+```
+$ ssh-keygen
+$ git clone https://github.com/SESA/appbuilder.git
+$ appbuilder/scripts/basicVMsetup
+```
 
-    git clone https://github.com/SESA/appbuilder.git
-    git clone https://github.com/jappavoo/nbic.git
+Assuming successfull clone you can now use the scripts in appbuilder/scripts to
+help complete the setup.  Please note this are not very complicated and if
+you have any problems look at the scripts and do the steps by hand correcting
+any thing that goes wrong.
+
+
+### Kernels Setup
+
+Note: To build a kernel you will need to start the VM with enough memory eg. APPBUILDER_MEMORY=8G scripts/bootAppBuildVM
+
+The goal is to  leave in the AppBuilderVM the infrastructure for building Kernels that are compatible with the application software
+you will use in your appliances.  This allows an app developer, know exactly what kernel they are packaging with their app and to configure and
+compiler customer kernels as they see fit.  The instructions below are to build a default app kernel that is the same as the kernel used to
+boot the AppBuilderVM -- as you may have noticed this is all assuming a debian distro.  
+
+The following is based on https://kernel-team.pages.debian.net/kernel-handbook/ch-common-tasks.html
+
+1. find out what the kernel source version available is: `apt search linux-source`
+2. assuming you are running the stable version you can use the script: `setupKernels`
+   - 
+```
+sudo apt install linux-source build-dep linux
+[[ ! -d ~/Kernels ]] && mkdir ~/Kernels
+cd ~/Kernels
+
+[[ ! -d linux-source-$(uname -r) ]] && \
+  tar xaf /usr/src/linux-source-$(uname -r).tar.xz
+
+# use system config as basis for our kernel build
+cp  /boot/config-$(uname -r) .config
+
+# turn off module signing... I think this is right
+scripts/config --disable MODULE_SIG
+scripts/config --set-str SYSTEM_TRUSTED_KEYS ''
+scripts/config --disable SYSTEM_TRUSTED_KEYRING
+scripts/config --disable MODULE_SIG_ALL
+scripts/config --set-str MODULE_SIG_KEY ''
+
+# set parallelism
+export MAKEFLAGS=-j$(nproc)
+
+make oldconfig
+make clean
+make bindeb-pkg
+```
+
+
+
 
 Grab the debian kernel source package
 
