@@ -1,6 +1,11 @@
 #!/bin/bash
 
-sudo apt install linux-source build-dep linux
+if [[ ! -a /usr/src/linux-source-$(uname -r).tar.xz ]]; then
+    echo "ERROR: could not find /usr/src/linux-source-$(uname -r).tar.xz"
+    echo "   Please install the kernel source package that matchs the "
+    echo "   kernel version you are running."
+fi
+
 [[ ! -d ~/Kernels ]] && mkdir ~/Kernels
 cd ~/Kernels
 
