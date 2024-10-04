@@ -1,9 +1,13 @@
 #!/bin/bash
 
 sudo apt update
+sudo apt upgrade
 sudo apt-get install git \
   build-essential bc kmod cpio flex libncurses5-dev libelf-dev libssl-dev dwarves bison \
   cdebootstrap
+echo "If you think you might need a reboot based on what what installed then press ctl-c and sudo reboot"
+echo "else press return"
+read
 cd ~
 #git clone https://github.com/SESA/appbuilder.git
 if ! git clone https://github.com/jappavoo/nbic.git; then
