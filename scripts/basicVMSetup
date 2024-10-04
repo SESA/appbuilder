@@ -10,7 +10,7 @@ echo "else press return"
 read
 cd ~
 #git clone https://github.com/SESA/appbuilder.git
-if ! git clone https://github.com/jappavoo/nbic.git; then
+if ! git clone git@github.com:jappavoo/nbic.git; then
   cat <<EOF
 Please note the nbic repo is private and you will need jappavoo to give you access.  Eg.
 $ ssh-keygen

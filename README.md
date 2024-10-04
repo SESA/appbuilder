@@ -173,9 +173,10 @@ the setup process.  The next few steps must be done by hand on the vm.
 
 ```
 sudo apt update
-sudo apt install ssh git
+sudo apt upgrade
+sudo apt install 
 ssh-keygen
-git clone https://github.com/SESA/appbuilder.git
+git clone git@github.com:SESA/appbuilder.git
 appbuilder/scripts/basicVMsetup
 ```
 
